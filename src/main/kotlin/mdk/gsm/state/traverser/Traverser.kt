@@ -1,7 +1,7 @@
 package mdk.gsm.state.traverser
 
 import mdk.gsm.graph.IVertex
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.GraphSupplier
 
 /**
  * Primary interface for interacting with a graph-based traverser. This interface combines the capabilities
@@ -18,7 +18,7 @@ import mdk.gsm.state.ITransitionGuardState
  *
  * @param V The type of vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param F The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
+ * @param G The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
  * @see TraverserDispatcher For dispatching actions to the traverser
@@ -26,22 +26,22 @@ import mdk.gsm.state.ITransitionGuardState
  * @see mdk.gsm.builder.buildTraverser
  * @see mdk.gsm.builder.buildTraverserWithActions
  */
-interface Traverser<V, I, F, A> : TraverserDispatcher<V, I, F, A>, TraverserState<V, I, F, A>
-        where V : IVertex<I>, F : ITransitionGuardState
+interface Traverser<V, I, G, A> : TraverserDispatcher<V, I, G, A>, TraverserState<V, I, G, A>, GraphSupplier<V, I, G, A>
+        where V : IVertex<I>
 {
     /**
      * Provides read-only access to the traverser's current state and traversal path.
      * This property allows accessing the traverser's data without the ability to modify it.
      */
-    val traverserState : TraverserState<V, I, F, A>
+    val traverserState : TraverserState<V, I, G, A>
 
     /**
      * Provides the ability to dispatch actions to the traverser, causing state transitions.
      * This property allows modifying the traverser's state through controlled actions.
      */
-    val traverserDispatcher : TraverserDispatcher<V, I, F, A>
+    val traverserDispatcher : TraverserDispatcher<V, I, G, A>
 
-    operator fun component1(): TraverserState<V, I, F, A> = traverserState
+    operator fun component1(): TraverserState<V, I, G, A> = traverserState
 
-    operator fun component2(): TraverserDispatcher<V, I, F, A> = traverserDispatcher
+    operator fun component2(): TraverserDispatcher<V, I, G, A> = traverserDispatcher
 }

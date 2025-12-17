@@ -3,14 +3,14 @@ package mdk.gsm.graph.transition
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.*
 
-internal class TransitionMediator<V, I, F, A>(
-    private val forwardTransition: IForwardTransition<V, I, F, A>,
-    private val previousTransition: IPreviousTransition<V, I, F, A>,
+internal class TransitionMediator<V, I, G, A>(
+    private val forwardTransition: IForwardTransition<V, I, G, A>,
+    private val previousTransition: IPreviousTransition<V, I, G, A>,
     private val resettable: IResettable<V>,
     private val pathTraceable: IPathTraceable<V>,
-    private val transitionGuardState: F,
+    private val transitionGuardState: G?,
     private val gsmConfig: GsmConfig
-) where V : IVertex<I>, F : ITransitionGuardState {
+) where V : IVertex<I> {
 
     var currentBounds = TransitionBounds.WithinBounds
     var currentArgs: A? = null
@@ -144,7 +144,7 @@ internal class TransitionMediator<V, I, F, A>(
     }
 
     fun handleReset() : TransitionState<V, I, A> {
-        transitionGuardState.onReset()
+        (transitionGuardState as? ITransitionGuardState)?.onReset()
         return TransitionState(
             vertex = resettable.reset(),
             transitionBounds = TransitionBounds.WithinBounds,
@@ -157,11 +157,11 @@ internal class TransitionMediator<V, I, F, A>(
     }
 
     companion object {
-        fun <V, I, F, A> create(
-            capabilities: TransitionCapabilities<V, I, F, A>,
-            transitionGuardState: F,
+        fun <V, I, G, A> create(
+            capabilities: TransitionCapabilities<V, I, G, A>,
+            transitionGuardState: G?,
             gsmConfig: GsmConfig
-        ): TransitionMediator<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+        ): TransitionMediator<V, I, G, A> where V : IVertex<I> {
             return TransitionMediator(
                 forwardTransition = capabilities.forward,
                 previousTransition = capabilities.previous,

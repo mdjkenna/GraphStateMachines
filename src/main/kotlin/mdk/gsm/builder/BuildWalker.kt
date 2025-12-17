@@ -8,8 +8,11 @@ import mdk.gsm.action.CompletableAction
 import mdk.gsm.builder.DispatcherConfig.Companion.toChannel
 import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
-import mdk.gsm.scope.GraphStateMachineScopeFactory
-import mdk.gsm.state.*
+import mdk.gsm.scope.StateMachineScopeFactory
+import mdk.gsm.state.GraphStateMachineAction
+import mdk.gsm.state.GsmController
+import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.TransitionBounds
 import mdk.gsm.state.walker.Walker
 import mdk.gsm.state.walker.WalkerDispatcherImplementation
 import mdk.gsm.state.walker.WalkerImplementation
@@ -24,13 +27,13 @@ import mdk.gsm.state.walker.WalkerStateImplementation
  * and stored on the resulting [mdk.gsm.state.TransitionState.args].
  *
  * Overload selection:
- * - Choose this overload if you need both a custom guard state ([F]) and per-action arguments ([A]).
+ * - Choose this overload if you need both a custom guard state ([G]) and per-action arguments ([A]).
  * - If you do not need per-action arguments, prefer [buildWalker] without [A].
  * - If you also do not need a custom guard state, prefer the simplest [buildWalker] overload.
  *
  * Parameters:
  * - [guardState]: The initial state shared by all transition guards.
- * - [coroutineScope]: Scope used for dispatch; defaults to [GraphStateMachineScopeFactory.newScope].
+ * - [coroutineScope]: Scope used for dispatch; defaults to [StateMachineScopeFactory.newScope].
  * - [dispatcherConfig]: Controls channel capacity/overflow for action dispatching.
  * - [builderFunction]: DSL to declare vertices, edges, and options.
  *
@@ -51,16 +54,16 @@ import mdk.gsm.state.walker.WalkerStateImplementation
  *
  * @param V The type of vertices (states). Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state. Must implement [ITransitionGuardState].
  * @param A The type of per-action arguments used with [GraphStateMachineAction.NextArgs].
  */
-fun <V, I, F, A> buildWalkerWithActions(
-    guardState : F,
-    coroutineScope : CoroutineScope = GraphStateMachineScopeFactory.newScope(),
+fun <V, I, G, A> buildWalkerWithActions(
+    guardState : G,
+    coroutineScope : CoroutineScope = StateMachineScopeFactory.newScope(),
     dispatcherConfig: DispatcherConfig<A> = DispatcherConfig(),
-    builderFunction : WalkerBuilderScope<V, I, F, A>.() -> Unit
-) : Walker<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
-    val graphStateMachineBuilder = GraphStateMachineBuilder<V, I, F, A>()
+    builderFunction : WalkerBuilderScope<V, I, G, A>.() -> Unit
+) : Walker<V, I, G, A> where V : IVertex<I> {
+    val graphStateMachineBuilder = GraphStateMachineBuilder<V, I, G, A>()
 
     val walkerBuilderScope = WalkerBuilderScope(graphStateMachineBuilder)
     builderFunction(walkerBuilderScope)
@@ -81,17 +84,17 @@ fun <V, I, F, A> buildWalkerWithActions(
  * Builds a graph-backed walker with a custom transition guard state and no per-action arguments.
  *
  * A walker only supports forward movement and does not keep a history of visited states.
- * Use this overload when you want guards backed by shared state ([F]) but you do not need to pass
+ * Use this overload when you want guards backed by shared state ([G]) but you do not need to pass
  * values with each action.
  *
  * Overload selection:
- * - Choose this overload if you need custom guard state ([F]) but not per-action arguments.
+ * - Choose this overload if you need custom guard state ([G]) but not per-action arguments.
  * - If you need per-action arguments as well, prefer [buildWalkerWithActions].
  * - If you need neither, prefer the simplest [buildWalker] overload.
  *
  * Example:
  * ```kotlin
- * val walker = buildWalker<MyVertex, String, Flags>(
+ * val walker = buildGuardedWalker<MyVertex, String, Flags>(
  *     guardState = Flags()
  * ) {
  *     buildGraph(startAtVertex = MyVertex.Start) {
@@ -102,24 +105,24 @@ fun <V, I, F, A> buildWalkerWithActions(
  *
  * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param F The transition guard state shared across edges. Must implement [ITransitionGuardState].
+ * @param G The transition guard state shared across edges.
  * @param guardState The initial state for transition guards, shared across all edges.
- * @param coroutineScope The coroutine scope used for dispatching actions. Defaults to [GraphStateMachineScopeFactory.newScope].
+ * @param coroutineScope The coroutine scope used for dispatching actions. Defaults to [StateMachineScopeFactory.newScope].
  * @param dispatcherConfig Configuration for the dispatcher channel. Controls buffering and overflow behavior.
  * @param builderFunction The builder scope function for configuring the walker.
  * @return A fully configured [Walker] instance.
  * @throws IllegalStateException If the walker is not configured correctly when attempting to build.
  */
 @GsmBuilderScope
-fun <V, I, F> buildWalker(
-    guardState : F,
-    coroutineScope : CoroutineScope = GraphStateMachineScopeFactory.newScope(),
+fun <V, I, G> buildGuardedWalker(
+    guardState : G,
+    coroutineScope : CoroutineScope = StateMachineScopeFactory.newScope(),
     dispatcherConfig: DispatcherConfig<Nothing> = DispatcherConfig(),
-    builderFunction : WalkerBuilderScope<V, I, F, Nothing>.() -> Unit
-) : Walker<V, I, F, Nothing>
-    where V : IVertex<I>, F : ITransitionGuardState {
+    builderFunction : WalkerBuilderScope<V, I, G, Nothing>.() -> Unit
+) : Walker<V, I, G, Nothing>
+    where V : IVertex<I> {
 
-    val graphStateMachineBuilder = GraphStateMachineBuilder<V, I, F, Nothing>()
+    val graphStateMachineBuilder = GraphStateMachineBuilder<V, I, G, Nothing>()
 
     val walkerBuilderScope = WalkerBuilderScope(graphStateMachineBuilder)
     builderFunction(walkerBuilderScope)
@@ -145,7 +148,7 @@ fun <V, I, F> buildWalker(
  *
  * Overload selection:
  * - Choose this overload if you need neither custom guard state nor per-action arguments.
- * - If you need guard state, prefer [buildWalker] with [F].
+ * - If you need guard state, prefer [buildGuardedWalker].
  * - If you also need per-action arguments, prefer [buildWalkerWithActions].
  *
  * Example:
@@ -159,7 +162,7 @@ fun <V, I, F> buildWalker(
  *
  * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param scope The coroutine scope used for dispatching actions. Defaults to [GraphStateMachineScopeFactory.newScope].
+ * @param scope The coroutine scope used for dispatching actions. Defaults to [StateMachineScopeFactory.newScope].
  * @param dispatcherConfig Configuration for the dispatcher channel. Controls buffering and overflow behavior.
  * @param builderFunction The builder scope function for configuring the walker.
  * @return A fully configured [Walker] instance.
@@ -167,13 +170,13 @@ fun <V, I, F> buildWalker(
  */
 @GsmBuilderScope
 fun <V, I> buildWalker(
-    scope : CoroutineScope = GraphStateMachineScopeFactory.newScope(),
+    scope : CoroutineScope = StateMachineScopeFactory.newScope(),
     dispatcherConfig: DispatcherConfig<Nothing> = DispatcherConfig(),
-    builderFunction : WalkerBuilderScope<V, I, ITransitionGuardState, Nothing>.() -> Unit
-) : Walker<V, I, ITransitionGuardState, Nothing> where V : IVertex<I> {
+    builderFunction : WalkerBuilderScope<V, I, Nothing, Nothing>.() -> Unit
+) : Walker<V, I, Nothing, Nothing> where V : IVertex<I> {
 
-    val graphStateMachineBuilder = GraphStateMachineBuilder<V, I, ITransitionGuardState, Nothing>()
-    graphStateMachineBuilder.transitionGuardState = NoTransitionGuardState
+    val graphStateMachineBuilder = GraphStateMachineBuilder<V, I, Nothing, Nothing>()
+    graphStateMachineBuilder.transitionGuardState = null
 
     val walkerBuilderScope = WalkerBuilderScope(graphStateMachineBuilder)
     builderFunction(walkerBuilderScope)
@@ -196,22 +199,23 @@ fun <V, I> buildWalker(
  * Unlike [TraverserBuilderScope], it does not expose methods for configuring the edge exploration strategy,
  * as walkers only support forward movement.
  *
- * Instances of this class are created by the [buildWalker] and [buildWalkerWithActions]
+ * Instances of this class are created by the [buildWalker], [buildGuardedWalker], and [buildWalkerWithActions]
  * functions and passed to the builder function provided to those functions.
  *
  * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param F The traversal guard state shared across edges. Must implement [ITransitionGuardState].
+ * @param G The traversal guard state shared across edges. Must implement [ITransitionGuardState].
  * @param A The type of arguments that can be passed with actions to influence traversal decisions.
  *
  * @see buildWalker
+ * @see buildGuardedWalker
  * @see buildWalkerWithActions
  * @see GraphStateMachineBuilder
  */
 @GsmBuilderScope
-class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
-    internal val graphStateMachineBuilder: GraphStateMachineBuilder<V, I, F, A>
-) where V : IVertex<I>, F : ITransitionGuardState {
+class WalkerBuilderScope<V, I, G, A> @PublishedApi internal constructor(
+    internal val graphStateMachineBuilder: GraphStateMachineBuilder<V, I, G, A>
+) where V : IVertex<I> {
 
     /**
      * Assigns an already-built [Graph] and sets the start vertex for the walker.
@@ -228,7 +232,7 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
      * @param startAtVertex The start vertex. Must exist in [graph].
      * @param graph The graph to assign to this walker.
      */
-    fun setWorkflowGraph(startAtVertex : V, graph: Graph<V, I, F, A>) {
+    fun setWorkflowGraph(startAtVertex : V, graph: Graph<V, I, G, A>) {
         graphStateMachineBuilder.graph = graph
         graphStateMachineBuilder.startVertex = startAtVertex
     }
@@ -251,8 +255,8 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
      * @param startAtVertex The vertex to start at. Must exist in the graph after building.
      * @param scopeConsumer A DSL that configures the graph via [GraphBuilderScope].
      */
-    fun buildGraph(startAtVertex : V, scopeConsumer : GraphBuilderScope<V, I, F, A>.() -> Unit) {
-        val graphGraphBuilder = GraphBuilder<V, I, F, A>()
+    fun buildGraph(startAtVertex : V, scopeConsumer : GraphBuilderScope<V, I, G, A>.() -> Unit) {
+        val graphGraphBuilder = GraphBuilder<V, I, G, A>()
         val graphBuilderScope = GraphBuilderScope(graphGraphBuilder)
         scopeConsumer(graphBuilderScope)
         graphStateMachineBuilder.graph = graphGraphBuilder.build()
@@ -265,7 +269,7 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
      * Accepts the same parameters and builds the graph using a [GraphBuilderScope], then sets
      * [startAtVertex] as the start vertex.
      */
-    fun g(startAtVertex : V, scopeConsumer : GraphBuilderScope<V, I, F, A>.() -> Unit) {
+    fun g(startAtVertex : V, scopeConsumer : GraphBuilderScope<V, I, G, A>.() -> Unit) {
         buildGraph(startAtVertex, scopeConsumer)
     }
 
@@ -273,7 +277,7 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
      * Sets the transition guard state for the entire walker.
      * Can be ignored if not building a walker with transition guards; however, it must not be null if specified as a type parameter.
      */
-    fun setTraversalGuardState(guardState: F) {
+    fun setTraversalGuardState(guardState: G) {
         graphStateMachineBuilder.transitionGuardState = guardState
     }
 
@@ -312,7 +316,7 @@ class WalkerBuilderScope<V, I, F, A> @PublishedApi internal constructor(
 }
 
 @PublishedApi
-internal fun <V, I, F, A> GraphStateMachineBuilder<V, I, F, A>.buildForWalker(): GsmController<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+internal fun <V, I, G, A> GraphStateMachineBuilder<V, I, G, A>.buildForWalker(): GsmController<V, I, G, A> where V : IVertex<I> {
     useStatelessWalk = true
 
     return build()

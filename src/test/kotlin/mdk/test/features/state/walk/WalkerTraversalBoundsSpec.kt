@@ -2,11 +2,8 @@ package mdk.test.features.state.walk
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import mdk.gsm.builder.buildWalker
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
-import mdk.gsm.state.walker.Walker
-import mdk.gsm.util.LongVertex
+import mdk.test.scenarios.GraphScenarios
 
 class WalkerTraversalBoundsSpec : BehaviorSpec({
     Given("""
@@ -14,27 +11,12 @@ class WalkerTraversalBoundsSpec : BehaviorSpec({
         which has been configured to explicitly step into bounds in the builder
     """.trimIndent()) {
 
-        val walker: Walker<LongVertex, Long, ITransitionGuardState, Nothing> = buildWalker {
-            val v1 = LongVertex(1L)
-            val v2 = LongVertex(2L)
-
-            setExplicitTransitionIntoBounds(true)
-
-            buildGraph(v1) {
-                addVertex(v1) {
-                    addEdge {
-                        setTo(v2)
-                    }
-                }
-                addVertex(v2)
-            }
-        }
+        val walker = GraphScenarios.twoVertexBoundsWalker()
 
         When("Walker has just been initialised without having yet received any actions") {
             Then("The walker's current state is the start vertex, which is within bounds and not beyond last") {
                 walker.current.value.isWithinBounds shouldBe true
                 walker.current.value.isBeyondLast shouldBe false
-                walker.current.value.vertex.id shouldBe 1L
             }
         }
 

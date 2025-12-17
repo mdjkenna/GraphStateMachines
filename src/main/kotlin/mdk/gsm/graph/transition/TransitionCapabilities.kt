@@ -1,12 +1,11 @@
 package mdk.gsm.graph.transition
 
 import mdk.gsm.graph.IVertex
-import mdk.gsm.state.ITransitionGuardState
 
-internal data class TransitionCapabilities<V, I, F, A>(
-    val forward: IForwardTransition<V, I, F, A>,
-    val previous: IPreviousTransition<V, I, F, A>,
+internal data class TransitionCapabilities<V, I, G, A>(
+    val forward: IForwardTransition<V, I, G, A>,
+    val previous: IPreviousTransition<V, I, G, A>,
     val resettable: IResettable<V>,
     val pathTraceable: IPathTraceable<V>
-) where V : IVertex<I>, F : ITransitionGuardState
+) where V : IVertex<I>
 

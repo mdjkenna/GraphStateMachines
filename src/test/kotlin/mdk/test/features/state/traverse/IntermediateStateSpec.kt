@@ -15,15 +15,12 @@ class TestTransitionGuardState : ITransitionGuardState {
 
 class IntermediateStateSpec : BehaviorSpec({
 
-
-    val ids = TestBuilderUtils.IntermediateTestingIds
-    val publishedStates = mutableListOf<String>()
-    val beforeVisitCalls = mutableListOf<String>()
-
-    val guardState = TestTransitionGuardState()
-
-
     Given("A graph state machine with intermediate states") {
+        val ids = TestBuilderUtils.IntermediateTestingIds
+        val publishedStates = mutableListOf<String>()
+        val beforeVisitCalls = mutableListOf<String>()
+        val guardState = TestTransitionGuardState()
+        
         val (state, dispatcher) =
             TestBuilderUtils.buildIntermediateTestGraph(
                 guardState = guardState,

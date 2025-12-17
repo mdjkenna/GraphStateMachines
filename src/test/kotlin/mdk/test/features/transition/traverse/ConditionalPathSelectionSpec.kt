@@ -3,25 +3,24 @@ package mdk.test.features.transition.traverse
 import io.kotest.core.spec.style.BehaviorSpec
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
+import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.AssertionUtils
-import mdk.test.utils.TestBuilderUtils
 import mdk.test.utils.TestTransitionGuardState
 
 class ConditionalPathSelectionSpec : BehaviorSpec({
-    val guardState = TestTransitionGuardState()
-    val traverser = TestBuilderUtils.build8VertexGraphStateMachine(
-        testProgressionFlags = guardState,
-        edgeTraversalType = EdgeTraversalType.DFSAcyclic
-    )
 
-    Given("A cyclic graph state machine with traversal guard conditions which evaluate to block traversal along a model 8 vertex graph") {
+    Given("An 8-vertex graph with traversal guard conditions for blocking specific paths") {
+        val guardState = TestTransitionGuardState()
+        val traverser = GraphScenarios.conditionalEightVertexTraverser(
+            guardState = guardState,
+            edgeTraversalType = EdgeTraversalType.DFSAcyclic
+        )
 
-        When("Traversal along particular paths is blocked by traversal guard condition evaluations") {
-
+        When("Traversal to vertices 2 and 7 is blocked") {
             guardState.blockedGoingTo2 = true
             guardState.blockedGoingTo7 = true
 
-            Then("Traversal should not occur along the blocked path but instead traverse along the remaining paths which are not blocked") {
+            Then("Traversal takes the unblocked path through vertices 3, 5, 6") {
                 AssertionUtils.assertExpectedPathGoingNextUntilEnd(
                     traverser,
                     listOf("1", "3", "5", "6")
@@ -34,13 +33,11 @@ class ConditionalPathSelectionSpec : BehaviorSpec({
             }
         }
 
-        When("Traversal along a different path is blocked by traversal guard condition evaluation") {
+        When("Graph is reset and traversal to vertex 3 is blocked") {
             traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
-
             guardState.blockedGoingTo3 = true
 
-            Then("The other paths which were previously blocked should still be traversed, however the newly blocked traversal is prevented") {
-
+            Then("Traversal takes the alternate path through vertices 2, 4, 8") {
                 AssertionUtils.assertExpectedPathGoingNextUntilEnd(
                     expectedPath = listOf("1", "2", "4", "8"),
                     traverser = traverser

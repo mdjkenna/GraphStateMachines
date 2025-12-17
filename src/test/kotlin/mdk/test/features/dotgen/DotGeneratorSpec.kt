@@ -2,7 +2,7 @@ package mdk.test.features.dotgen
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
-import mdk.gsm.builder.buildGraphOnly
+import mdk.gsm.builder.buildGuardedTraverser
 import mdk.gsm.dot.DotConfig
 import mdk.gsm.dot.DotDefaults
 import mdk.gsm.dot.DotGenerator
@@ -14,49 +14,47 @@ import mdk.gsm.state.ITransitionGuardState
 
 class DotGeneratorSpec : BehaviorSpec({
 
-    Given("A graph only") {
+    Given("A small directed graph for DOT generation") {
         data class StringVertex(override val id: String) : IVertex<String>
 
         class SimpleGuardState : ITransitionGuardState {
             override fun onReset() {}
         }
 
-        val graph = buildGraphOnly<StringVertex, String, SimpleGuardState, Unit> {
+        val traverser = buildGuardedTraverser(SimpleGuardState()) {
+            buildGraph(StringVertex("A")) {
+                v(StringVertex("A")) {
+                    addEdge {
+                        setTo("B")
+                    }
+                    addEdge {
+                        setTo("C")
+                    }
+                }
 
-            v(StringVertex("A")) {
-                addEdge {
-                    setTo("B")
+                v(StringVertex("B")) {
+                    addEdge {
+                        setTo("D")
+                    }
                 }
-                addEdge {
-                    setTo("C")
+
+                v(StringVertex("C")) {
+                    addEdge {
+                        setTo("D")
+                    }
                 }
+
+                v(StringVertex("D"))
             }
-
-            v(StringVertex("B")) {
-                addEdge {
-                    setTo("D")
-                }
-            }
-
-            v(StringVertex("C")) {
-                addEdge {
-                    setTo("D")
-                }
-            }
-
-            v(StringVertex("D"))
         }
 
         When("Generating a DOT representation without decorations") {
-            val dotGenerator = DotGenerator<StringVertex, String, SimpleGuardState, Unit>(
+            val dotContent = DotGenerator.generateDotFromMachine(
+                traverser,
                 DotConfig(showEdgeIndices = true)
             )
-            val dotContent = dotGenerator.generateDot(graph)
 
             Then("The DOT content should contain all vertices and edges with default styling") {
-                println("[DEBUG_LOG] DOT content without decorations:\n$dotContent")
-
-                // Check default vertex styling
                 dotContent shouldContain "\"A\" [label=\"A\""
                 dotContent shouldContain "style=\"${DotDefaults.DEFAULT_VERTEX_STYLE}\""
                 dotContent shouldContain "fillcolor=\"${DotDefaults.DEFAULT_VERTEX_FILL_COLOR}\""
@@ -64,12 +62,10 @@ class DotGeneratorSpec : BehaviorSpec({
                 dotContent shouldContain "fontcolor=\"${DotDefaults.DEFAULT_VERTEX_TEXT_COLOR}\""
                 dotContent shouldContain "penwidth=${DotDefaults.DEFAULT_VERTEX_PEN_WIDTH}"
 
-                // Check other vertices
                 dotContent shouldContain "\"B\" [label=\"B\""
                 dotContent shouldContain "\"C\" [label=\"C\""
                 dotContent shouldContain "\"D\" [label=\"D\""
 
-                // Check edges
                 dotContent shouldContain "\"A\" -> \"B\" [label=\"[0]\", color=\"${DotDefaults.DEFAULT_EDGE_COLOR}\", fontcolor=\"${DotDefaults.DEFAULT_EDGE_COLOR}\", penwidth=${DotDefaults.DEFAULT_EDGE_PEN_WIDTH}];"
                 dotContent shouldContain "\"A\" -> \"C\" [label=\"[1]\", color=\"${DotDefaults.DEFAULT_EDGE_COLOR}\", fontcolor=\"${DotDefaults.DEFAULT_EDGE_COLOR}\", penwidth=${DotDefaults.DEFAULT_EDGE_PEN_WIDTH}];"
                 dotContent shouldContain "\"B\" -> \"D\" [label=\"[0]\", color=\"${DotDefaults.DEFAULT_EDGE_COLOR}\", fontcolor=\"${DotDefaults.DEFAULT_EDGE_COLOR}\", penwidth=${DotDefaults.DEFAULT_EDGE_PEN_WIDTH}];"
@@ -78,19 +74,18 @@ class DotGeneratorSpec : BehaviorSpec({
         }
 
         When("Generating a DOT representation with basic decorations") {
-            val dotGenerator = DotGenerator<StringVertex, String, SimpleGuardState, Unit>(
+            val dotContent = DotGenerator.generateDotFromMachine(
+                traverser,
                 DotConfig(showEdgeIndices = true)
-            )
-                .decorateVertex("A", VertexDecoration(description = "Start Node", fillColor = "blue"))
-                .decorateVertex("D", VertexDecoration(description = "End Node", fillColor = "red"))
-                .decorateEdge("A", "B", EdgeDecoration(description = "Path 1", color = "green"))
-                .decorateEdge("A", "C", EdgeDecoration(description = "Path 2", color = "orange"))
-                .decorateTransitionGuard("B", "D", TransitionGuardDecoration(description = "Guard condition"))
-
-            val dotContent = dotGenerator.generateDot(graph, "DecoratedGraph")
+            ) {
+                decorateVertex("A", VertexDecoration(description = "Start Node", fillColor = "blue"))
+                decorateVertex("D", VertexDecoration(description = "End Node", fillColor = "red"))
+                decorateEdge("A", "B", EdgeDecoration(description = "Path 1", color = "green"))
+                decorateEdge("A", "C", EdgeDecoration(description = "Path 2", color = "orange"))
+                decorateTransitionGuard("B", "D", TransitionGuardDecoration(description = "Guard condition"))
+            }
 
             Then("The DOT content should contain all decorations") {
-                // Check vertex A with decoration
                 dotContent shouldContain "\"A\" [label=\"A\\nStart Node\""
                 dotContent shouldContain "style=\"filled\""
                 dotContent shouldContain "fillcolor=\"blue\""
@@ -108,7 +103,6 @@ class DotGeneratorSpec : BehaviorSpec({
         }
 
         When("Generating a DOT representation with custom vertex styling") {
-            // Create a custom config with different default vertex decoration
             val customConfig = DotConfig(
                 defaultVertexDecoration = VertexDecoration(
                     fillColor = "#336699",
@@ -128,10 +122,9 @@ class DotGeneratorSpec : BehaviorSpec({
                 penWidth = 4.0
             )
 
-            val dotGenerator = DotGenerator<StringVertex, String, SimpleGuardState, Unit>(customConfig)
-                .decorateVertex("A", customVertexDecoration)
-
-            val dotContent = dotGenerator.generateDot(graph, "CustomStyledGraph")
+            val dotContent = DotGenerator.generateDotFromMachine(traverser, customConfig) {
+                decorateVertex("A", customVertexDecoration)
+            }
 
             Then("The DOT content should contain custom styling") {
                 dotContent shouldContain "\"A\" [label=\"A\\nCustom Styled\""

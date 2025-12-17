@@ -3,28 +3,23 @@ package mdk.test.features.state.walk
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.CoroutineScope
-import mdk.gsm.builder.buildWalker
-import mdk.gsm.scope.GraphStateMachineScopeFactory
+import mdk.gsm.scope.StateMachineScopeFactory
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
-import mdk.gsm.state.walker.Walker
-import mdk.gsm.util.StringVertex
+import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.TestTransitionGuardState
 
 class WalkerIntermediateStateSpec : BehaviorSpec({
 
-    val ids = WalkerTestingIds
-    val publishedStates = mutableListOf<String>()
-    val beforeVisitCalls = mutableListOf<String>()
-
-    val guardState = TestTransitionGuardState()
-
     Given("A walker with intermediate states") {
-        val walker = buildWalkerIntermediateTestGraph(
-            guardState = guardState,
-            beforeVisitCalls = beforeVisitCalls
-        )
+        val ids = WalkerTestingIds
+        val publishedStates = mutableListOf<String>()
+        val beforeVisitCalls = mutableListOf<String>()
+        val guardState = TestTransitionGuardState()
+        
+        val walker = GraphScenarios.intermediateStateWalker(
+            guardState,
+            StateMachineScopeFactory.newScope()
+        ) { vertexId -> beforeVisitCalls.add(vertexId) }
 
         publishedStates.add(walker.current.value.vertex.id)
 
@@ -84,18 +79,20 @@ class WalkerIntermediateStateSpec : BehaviorSpec({
             }
         }
 
-        When("""
+        When(
+            """
             A NEXT action is received with the next vertex auto advancing while being the last available vertex. 
-            The END vertex, which is the next and last vertex, with no more vertices left in the graph to traverse, is an intermediate state in the sense that it 'auto-advances'.
+            The END vertex, which is the next and last vertex, with no more vertices left in the graph to traverse, is an intermediate state in the sense that it 'auto-advances'. 
             However, given that there are no more vertices to traverse, there is no state to auto-advance to.
-        """.trimMargin()) {
+            """.trimMargin()
+        ) {
 
             publishedStates.add(
                 walker.dispatchAndAwaitResult(GraphStateMachineAction.Next).vertex.id
             )
 
             Then(
-                 ("The walker publishes the END vertex state which is out of bounds. " +
+                ("The walker publishes the END vertex state which is out of bounds. " +
                   "For a state to be an 'intermediate-state' it has to be skippable currently. " +
                   "In this situation, although calling auto-advance, the state is not skippable as there are no states to traversal to left.")
                     .trimMargin()
@@ -121,80 +118,6 @@ class WalkerIntermediateStateSpec : BehaviorSpec({
             const val REGULAR_1 = "regular1"
             const val REGULAR_2 = "regular2"
             const val END = "end"
-        }
-
-        fun <F : ITransitionGuardState> buildWalkerIntermediateTestGraph(
-            guardState: F,
-            scope: CoroutineScope = GraphStateMachineScopeFactory.newScope(),
-            beforeVisitCalls: MutableList<String>
-        ): Walker<StringVertex, String, F, Nothing> {
-            val ids = WalkerTestingIds
-
-            return buildWalker(guardState, scope) {
-                val start = StringVertex(ids.START)
-                val intermediate1 = StringVertex(ids.INTERMEDIATE_1)
-                val regular1 = StringVertex(ids.REGULAR_1)
-                val intermediate2 = StringVertex(ids.INTERMEDIATE_2)
-                val regular2 = StringVertex(ids.REGULAR_2)
-                val end = StringVertex(ids.END)
-
-                buildGraph(start) {
-                    addVertex(start) {
-                        addEdge {
-                            setTo(intermediate1)
-                        }
-                    }
-
-                    addVertex(intermediate1) {
-                        onBeforeVisit {
-                            beforeVisitCalls.add(vertex.id)
-                            autoAdvance()
-                        }
-
-                        addEdge {
-                            setTo(regular1)
-                        }
-                    }
-
-                    addVertex(regular1) {
-                        onBeforeVisit {
-                            beforeVisitCalls.add(vertex.id)
-                        }
-
-                        addEdge {
-                            setTo(intermediate2)
-                        }
-                    }
-
-                    addVertex(intermediate2) {
-                        onBeforeVisit {
-                            beforeVisitCalls.add(vertex.id)
-                            autoAdvance()
-                        }
-
-                        addEdge {
-                            setTo(regular2)
-                        }
-                    }
-
-                    addVertex(regular2) {
-                        onBeforeVisit {
-                            beforeVisitCalls.add(vertex.id)
-                        }
-
-                        addEdge {
-                            setTo(end)
-                        }
-                    }
-
-                    addVertex(end) {
-                        onBeforeVisit {
-                            beforeVisitCalls.add(vertex.id)
-                            autoAdvance()
-                        }
-                    }
-                }
-            }
         }
     }
 }

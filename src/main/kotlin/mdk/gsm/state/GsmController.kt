@@ -7,9 +7,10 @@ import mdk.gsm.action.CompletableAction
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.transition.TransitionMediator
 
-internal class GsmController<V, I, F, A> internal constructor(
-    private val graphTransitionMediator: TransitionMediator<V, I, F, A>,
-) where V : IVertex<I>, F : ITransitionGuardState {
+internal class GsmController<V, I, G, A> internal constructor(
+    private val graphTransitionMediator: TransitionMediator<V, I, G, A>,
+    internal val graph: mdk.gsm.graph.Graph<V, I, G, A>
+) where V : IVertex<I> {
 
     val stateOut = MutableStateFlow<TransitionState<V, I, A>>(
         graphTransitionMediator.initialReadStartVertex()

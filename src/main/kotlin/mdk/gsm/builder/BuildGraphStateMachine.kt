@@ -9,21 +9,20 @@ import mdk.gsm.graph.transition.TransitionMediator
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GsmConfig
 import mdk.gsm.state.GsmController
-import mdk.gsm.state.ITransitionGuardState
 
 @PublishedApi
-internal class GraphStateMachineBuilder<V, I, F, A> @PublishedApi internal constructor()
-        where V : IVertex<I>, F : ITransitionGuardState {
+internal class GraphStateMachineBuilder<V, I, G, A> @PublishedApi internal constructor()
+        where V : IVertex<I> {
 
-    var graph : Graph<V, I, F, A>? = null
+    var graph : Graph<V, I, G, A>? = null
     var startVertex : V? = null
-    var transitionGuardState : F? = null
+    var transitionGuardState : G? = null
     var traversalType : EdgeTraversalType = EdgeTraversalType.DFSAcyclic
     var explicitlyTransitionIntoBounds : Boolean = false
     var useStatelessWalk : Boolean = false
 
     @PublishedApi
-    internal fun build(): GsmController<V, I, F, A> {
+    internal fun build(): GsmController<V, I, G, A> {
         val _graph = graph
         val _startVertex = startVertex
         val _transitionGuardState = this@GraphStateMachineBuilder.transitionGuardState
@@ -44,10 +43,6 @@ internal class GraphStateMachineBuilder<V, I, F, A> @PublishedApi internal const
             }
         }
 
-        check(_transitionGuardState != null) {
-            "The traversal guard state must be initialised"
-        }
-
         return GsmController(
             graphTransitionMediator = TransitionMediator.create(
                 capabilities = TransitionFactory.create(
@@ -58,7 +53,8 @@ internal class GraphStateMachineBuilder<V, I, F, A> @PublishedApi internal const
                 ),
                 transitionGuardState = _transitionGuardState,
                 gsmConfig = GsmConfig(explicitlyTransitionIntoBounds)
-            )
+            ),
+            graph = _graph
         )
     }
 }

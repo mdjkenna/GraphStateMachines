@@ -6,7 +6,6 @@ import mdk.gsm.graph.Edge
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.VertexContainer
 import mdk.gsm.state.BeforeVisitHandler
-import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.state.OutgoingTransitionHandler
 
 @GsmBuilderScope
@@ -14,9 +13,9 @@ import mdk.gsm.state.OutgoingTransitionHandler
  * DSL scope for configuring a single vertex in the graph.
  *
  */
-class VertexBuilderScope<V, I, F, A> internal constructor(
-    private val vertexContainerBuilder: VertexBuilder<V, I, F, A>
-) where V : IVertex<I>, F : ITransitionGuardState {
+class VertexBuilderScope<V, I, G, A> internal constructor(
+    private val vertexContainerBuilder: VertexBuilder<V, I, G, A>
+) where V : IVertex<I> {
 
     /**
      * Adds an outgoing edge from this vertex to a destination vertex.
@@ -48,9 +47,9 @@ class VertexBuilderScope<V, I, F, A> internal constructor(
      */
     fun addEdge(
         autoOrder : Boolean = true,
-        edgeBuilderScope : EdgeBuilderScope<V, I, F, A>.() -> Unit
+        edgeBuilderScope : EdgeBuilderScope<V, I, G, A>.() -> Unit
     ) {
-        val edgeBuilder = EdgeBuilder<V, I, F, A>(vertexContainerBuilder.stepInstance)
+        val edgeBuilder = EdgeBuilder<V, I, G, A>(vertexContainerBuilder.stepInstance)
 
         edgeBuilderScope(EdgeBuilderScope(edgeBuilder))
         if (autoOrder) {
@@ -67,7 +66,7 @@ class VertexBuilderScope<V, I, F, A> internal constructor(
      */
     fun e(
         autoOrder: Boolean = true,
-        edgeBuilderScope: EdgeBuilderScope<V, I, F, A>.() -> Unit
+        edgeBuilderScope: EdgeBuilderScope<V, I, G, A>.() -> Unit
     ) = addEdge(autoOrder, edgeBuilderScope)
 
     /**
@@ -89,7 +88,7 @@ class VertexBuilderScope<V, I, F, A> internal constructor(
      * @see BeforeVisitHandler
      * @see mdk.gsm.state.BeforeVisitScope
      */
-    fun onBeforeVisit(handler: BeforeVisitHandler<V, I, F, A>) {
+    fun onBeforeVisit(handler: BeforeVisitHandler<V, I, G, A>) {
         vertexContainerBuilder.beforeVisitHandler = handler
     }
 
@@ -110,28 +109,28 @@ class VertexBuilderScope<V, I, F, A> internal constructor(
      * @see OutgoingTransitionHandler
      * @see mdk.gsm.state.OutgoingTransitionScope
      */
-    fun onOutgoingTransition(handler: OutgoingTransitionHandler<V, I, F, A>) {
+    fun onOutgoingTransition(handler: OutgoingTransitionHandler<V, I, G, A>) {
         vertexContainerBuilder.outgoingTransitionHandler = handler
     }
 }
 
-internal class VertexBuilder<V, I, F, A>(
+internal class VertexBuilder<V, I, G, A>(
     internal val stepInstance: V
-) where V : IVertex<I>, F : ITransitionGuardState {
+) where V : IVertex<I> {
 
-    private val adjacent = HashMap<I, Edge<V, I, F, A>>()
-    var beforeVisitHandler: BeforeVisitHandler<V, I, F, A>? = null
-    var outgoingTransitionHandler: OutgoingTransitionHandler<V, I, F, A>? = null
+    private val adjacent = HashMap<I, Edge<V, I, G, A>>()
+    var beforeVisitHandler: BeforeVisitHandler<V, I, G, A>? = null
+    var outgoingTransitionHandler: OutgoingTransitionHandler<V, I, G, A>? = null
 
     val numberOfEdges: Int
         get() = adjacent.size
 
-    fun addOutgoingEdge(edge: Edge<V, I, F, A>) {
+    fun addOutgoingEdge(edge: Edge<V, I, G, A>) {
         adjacent[edge.to] = edge
     }
 
-    fun build(): VertexContainer<V, I, F, A> {
-        val sortedEdges : List<Edge<V, I, F, A>> = adjacent.values.sortedBy {
+    fun build(): VertexContainer<V, I, G, A> {
+        val sortedEdges : List<Edge<V, I, G, A>> = adjacent.values.sortedBy {
             it.order
         }
 

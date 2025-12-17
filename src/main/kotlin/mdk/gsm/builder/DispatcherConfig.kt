@@ -31,7 +31,7 @@ import mdk.gsm.state.GraphStateMachineAction
  *   Default is an empty handler.
  */
 data class DispatcherConfig<A>(
-    val capacity: Int = Channel.Factory.BUFFERED,
+    val capacity: Int = Channel.BUFFERED,
     val onBufferOverflow: BufferOverflow = BufferOverflow.SUSPEND,
     val onUndeliveredElement: (GraphStateMachineAction<A>) -> Unit = {}
 ) {

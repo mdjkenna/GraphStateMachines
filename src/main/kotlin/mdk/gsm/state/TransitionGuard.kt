@@ -19,15 +19,15 @@ import mdk.gsm.graph.IVertex
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of traversal guard state shared across the state machine. Must implement [ITransitionGuardState].
+ * @param G The type of traversal guard state shared across the state machine. Must implement [ITransitionGuardState].
  * @param A The type of arguments that can be passed with actions to influence traversal decisions.
  *
  * @see mdk.gsm.graph.Edge
  * @see TransitionGuardScope
  * @see mdk.gsm.builder.EdgeBuilderScope.setEdgeTransitionGuard
  */
-typealias TransitionGuard<V, I, F, A> =
-        suspend TransitionGuardScope<V, I, F, A>.() -> Boolean
+typealias TransitionGuard<V, I, G, A> =
+        suspend TransitionGuardScope<V, I, G, A>.() -> Boolean
 
 /**
  * Provides context and data to a [TransitionGuard] function during edge traversal evaluation.
@@ -49,7 +49,7 @@ typealias TransitionGuard<V, I, F, A> =
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of traversal guard state. Must implement [ITransitionGuardState].
+ * @param G The type of traversal guard state. Must implement [ITransitionGuardState].
  * @param A The type of arguments that can be passed with actions.
  *
  * @see TransitionGuard
@@ -57,8 +57,8 @@ typealias TransitionGuard<V, I, F, A> =
  * @see GraphStateMachineAction.NextArgs
  */
 @GsmBuilderScope
-class TransitionGuardScope<V, I, F, A>(
+class TransitionGuardScope<V, I, G, A>(
     val from : V,
-    val guardState : F,
+    val guardState : G?,
     val args : A?,
-) where V : IVertex<I>, F : ITransitionGuardState
+) where V : IVertex<I>

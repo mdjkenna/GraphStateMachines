@@ -7,18 +7,17 @@ import mdk.gsm.graph.transition.IForwardTransition
 import mdk.gsm.graph.transition.IPathTraceable
 import mdk.gsm.graph.transition.IPreviousTransition
 import mdk.gsm.graph.transition.IResettable
-import mdk.gsm.state.ITransitionGuardState
 
-internal class AcyclicDfsTraversal<V, I, F, A>(
-    private val graph: Graph<V, I, F, A>,
+internal class AcyclicDfsTraversal<V, I, G, A>(
+    private val graph: Graph<V, I, G, A>,
     private val startVertex: V
-) : IForwardTransition<V, I, F, A>, IPreviousTransition<V, I, F, A>, IResettable<V>, IPathTraceable<V> where V : IVertex<I>, F : ITransitionGuardState {
+) : IForwardTransition<V, I, G, A>, IPreviousTransition<V, I, G, A>, IResettable<V>, IPathTraceable<V> where V : IVertex<I> {
 
     private var traversalPath = TraversalPath<V, I, A>(startVertex)
 
     private val visited: HashSet<I> = HashSet()
 
-    override fun getVertexContainer(id: I): VertexContainer<V, I, F, A>? {
+    override fun getVertexContainer(id: I): VertexContainer<V, I, G, A>? {
         return graph.getVertexContainer(id)
     }
 
@@ -27,7 +26,7 @@ internal class AcyclicDfsTraversal<V, I, F, A>(
     }
 
     override suspend fun moveNext(
-        guardState: F,
+        guardState: G?,
         autoAdvance: Boolean,
         args: A?
     ): TraversalPathNode<V, A>? {
@@ -60,7 +59,7 @@ internal class AcyclicDfsTraversal<V, I, F, A>(
         return null
     }
 
-    private suspend fun nextVertexOrNull(vertex : V, flags: F, args: A?): V? {
+    private suspend fun nextVertexOrNull(vertex : V, flags: G?, args: A?): V? {
         val sortedEdges = graph.getOutgoingEdgesSorted(vertex)
 
         if (sortedEdges == null || sortedEdges.isEmpty()) {

@@ -17,21 +17,21 @@ import mdk.gsm.state.TransitionGuardScope
  *
  * @param V The type of the vertices (states). Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param F The type of the edge traversal guard. Must implement [ITransitionGuardState].
+ * @param G The type of the edge traversal guard. Must implement [ITransitionGuardState].
  * @param order The priority of this edge during traversal. Lower values are evaluated first.
  * @param from The source vertex of this edge.
  * @param to The identifier of the destination vertex.
  * @param transitionGuard An optional function that controls whether this edge can be traversed at runtime.
  */
-class Edge<out V, I, F, A> internal constructor(
+class Edge<out V, I, G, A> internal constructor(
     val order: Int,
     val from: V,
     val to: I,
-    private val transitionGuard: TransitionGuard<V, I, F, A>?
-) where F : ITransitionGuardState, V : IVertex<I> {
+    private val transitionGuard: TransitionGuard<V, I, G, A>?
+) where V : IVertex<I> {
 
     internal suspend fun canProceed(
-        flags: F,
+        flags: G?,
         args : A?,
     ): Boolean {
         return if (transitionGuard == null) {

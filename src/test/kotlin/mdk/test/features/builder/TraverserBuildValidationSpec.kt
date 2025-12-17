@@ -9,10 +9,10 @@ import mdk.test.utils.TestVertex
 
 class TraverserBuildValidationSpec : BehaviorSpec({
 
-    Given("A graph state machine builder") {
+    Given("A traverser builder with validation constraints") {
 
-        When("Building a graph with missing vertices causing dangling edges") {
-            Then("The build should fail with an appropriate error") {
+        When("A graph is built with edges referencing non-existent vertices") {
+            Then("The build fails with a dangling edge validation error") {
                 shouldThrow<IllegalStateException> {
                     buildTraverser {
                         buildGraph(TestVertex("1")) {
@@ -28,8 +28,8 @@ class TraverserBuildValidationSpec : BehaviorSpec({
             }
         }
 
-        When("Adding duplicate vertex identifiers to the graph") {
-            Then("The build should fail with a duplicate vertex error") {
+        When("A graph is built with duplicate vertex IDs") {
+            Then("The build fails with a duplicate vertex validation error") {
                 shouldThrow<IllegalStateException> {
                     buildTraverser {
                         buildGraph(TestVertex("1")) {
@@ -54,8 +54,8 @@ class TraverserBuildValidationSpec : BehaviorSpec({
             }
         }
 
-        When("Not specifying a traversal flag type and not setting flags") {
-            Then("The build should succeed without errors") {
+        When("A graph is built without specifying traversal flags") {
+            Then("The build succeeds with default flag configuration") {
                 val result = runCatching {
                     buildTraverser {
                         buildGraph(TestVertex("1")) {
@@ -73,16 +73,16 @@ class TraverserBuildValidationSpec : BehaviorSpec({
             }
         }
 
-        When("Not setting a graph at all") {
-            Then("The build should fail with an appropriate error") {
+        When("A traverser is built without calling buildGraph") {
+            Then("The build fails with a missing graph validation error") {
                 shouldThrow<IllegalStateException> {
                     buildTraverser<TestVertex, String> {}
                 }
             }
         }
 
-        When("Setting a correct start vertex and then changing to a non-existent vertex") {
-            Then("The build should fail with a vertex not found error") {
+        When("The start vertex is changed to a non-existent vertex after graph construction") {
+            Then("The build fails with a vertex not found validation error") {
                 shouldThrow<IllegalStateException> {
                     buildTraverser {
                         buildGraph(IntVertex(1)) {

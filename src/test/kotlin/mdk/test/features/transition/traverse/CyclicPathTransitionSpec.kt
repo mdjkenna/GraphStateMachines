@@ -3,23 +3,22 @@ package mdk.test.features.transition.traverse
 import io.kotest.core.spec.style.BehaviorSpec
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
+import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.AssertionUtils
 import mdk.test.utils.Test15VertexTransitionArgs
-import mdk.test.utils.TestBuilderUtils
 
 class CyclicPathTransitionSpec : BehaviorSpec({
 
-    Given("A state machine with a graph containing multiple cyclic paths and cyclic DFS traversal") {
-
+    Given("A 15-vertex graph with multiple cyclic paths using cyclic DFS traversal") {
         val transitionGuardState = Test15VertexTransitionArgs()
-        val traverser = TestBuilderUtils.build15VertexGraphStateMachine(
-            transitionGuardState = transitionGuardState,
-            edgeTraversalType = EdgeTraversalType.DFSCyclic,
+        val traverser = GraphScenarios.complex15VertexTraverser(
+            guardState = transitionGuardState,
+            edgeTraversalType = EdgeTraversalType.DFSCyclic
         )
-
+        
         var expectedPath = "1, 2, 4, 6, 3, 2, 4, 6, 3, 2, 4, 6, 3".split(", ")
 
-        When("The state machine has multiple NEXT actions dispatched that take it to a vertex with the first edge exploring a cyclic path which is unblocked") {
+        When("Multiple NEXT actions are dispatched that explore cyclic paths") {
             repeat(12) {
                 traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
             }
