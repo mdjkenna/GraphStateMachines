@@ -1,9 +1,9 @@
 package mdk.gsm.state.walker
 
 import kotlinx.coroutines.flow.StateFlow
+import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.state.TransitionState
 
 /**
@@ -14,13 +14,19 @@ import mdk.gsm.state.TransitionState
  *
  * @param V The type of vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param F The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
+ * @param G The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
  * @param A The type of action arguments that can be passed when dispatching actions.
  */
-internal class WalkerImplementation<V, I, F, A> (
-    override val walkerState: WalkerState<V, I, A>,
-    override val walkerDispatcher: WalkerDispatcher<V, I, F, A>
-) : Walker<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+internal class WalkerImplementation<V, I, G, A> (
+    private val walkerStateImpl: WalkerStateImplementation<V, I, G, A>,
+    override val walkerDispatcher: WalkerDispatcher<V, I, G, A>
+) : Walker<V, I, G, A> where V : IVertex<I> {
+
+    override val walkerState: WalkerState<V, I, A>
+        get() = walkerStateImpl
+
+    override val graph: Graph<V, I, G, A>
+        get() = walkerStateImpl.graph
 
     override val current: StateFlow<TransitionState<V, I, A>>
         get() = walkerState.current

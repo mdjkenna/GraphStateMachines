@@ -4,7 +4,6 @@ package mdk.gsm.builder
 
 import mdk.gsm.graph.Edge
 import mdk.gsm.graph.IVertex
-import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.state.TransitionGuard
 
 @GsmBuilderScope
@@ -20,9 +19,9 @@ import mdk.gsm.state.TransitionGuard
  * }
  * ```
  */
-class EdgeBuilderScope<V, I, F, A> internal constructor(
-    private val edgeBuilder: EdgeBuilder<V, I, F, A>
-) where V : IVertex<I>, F : ITransitionGuardState {
+class EdgeBuilderScope<V, I, G, A> internal constructor(
+    private val edgeBuilder: EdgeBuilder<V, I, G, A>
+) where V : IVertex<I> {
 
     /**
      * Sets the traversal order for this edge. Lower values are evaluated first.
@@ -55,19 +54,19 @@ class EdgeBuilderScope<V, I, F, A> internal constructor(
      * @param transitionGuard The function controlling traversal across this edge. Receives a
      *   [mdk.gsm.state.TransitionGuardScope] and returns `true` to allow the traversal, `false` to prevent it.
      */
-    fun setEdgeTransitionGuard(transitionGuard : TransitionGuard<V, I, F, A>) {
+    fun setEdgeTransitionGuard(transitionGuard : TransitionGuard<V, I, G, A>) {
         edgeBuilder.transitionGuard = transitionGuard
     }
 }
 
-internal class EdgeBuilder<V, I, F, A>(
+internal class EdgeBuilder<V, I, G, A>(
     private val from : V
-) where V : IVertex<I>, F : ITransitionGuardState {
+) where V : IVertex<I> {
     var order = 0
     var to : I? = null
-    var transitionGuard : TransitionGuard<V, I, F, A>? = null
+    var transitionGuard : TransitionGuard<V, I, G, A>? = null
 
-    fun build() : Edge<V, I, F, A> {
+    fun build() : Edge<V, I, G, A> {
 
         val localTo = to
         check(localTo != null)

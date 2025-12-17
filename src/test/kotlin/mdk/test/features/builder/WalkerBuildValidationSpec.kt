@@ -9,17 +9,16 @@ import mdk.test.utils.TestVertex
 
 class WalkerBuildValidationSpec : BehaviorSpec({
 
-    Given("A walker builder") {
+    Given("A walker builder with validation constraints") {
 
-        When("Building a graph with missing vertices causing dangling edges") {
-            Then("The build should fail with an appropriate error") {
+        When("A graph is built with edges referencing non-existent vertices") {
+            Then("The build fails with a dangling edge validation error") {
                 shouldThrow<IllegalStateException> {
                     buildWalker {
                         buildGraph(TestVertex("1")) {
                             addVertex(TestVertex("1")) {
                                 addEdge {
                                     setTo(TestVertex("2"))
-                                    setTo("2")
                                 }
                             }
                         }
@@ -28,8 +27,8 @@ class WalkerBuildValidationSpec : BehaviorSpec({
             }
         }
 
-        When("Adding duplicate vertex identifiers to the graph") {
-            Then("The build should fail with a duplicate vertex error") {
+        When("A graph is built with duplicate vertex IDs") {
+            Then("The build fails with a duplicate vertex validation error") {
                 shouldThrow<IllegalStateException> {
                     buildWalker {
                         buildGraph(TestVertex("1")) {
@@ -54,8 +53,8 @@ class WalkerBuildValidationSpec : BehaviorSpec({
             }
         }
 
-        When("Not specifying a traversal flag type and not setting flags") {
-            Then("The build should succeed without errors") {
+        When("A graph is built without specifying traversal flags") {
+            Then("The build succeeds with default flag configuration") {
                 val result = runCatching {
                     buildWalker {
                         buildGraph(TestVertex("1")) {
@@ -73,16 +72,16 @@ class WalkerBuildValidationSpec : BehaviorSpec({
             }
         }
 
-        When("Not setting a graph at all") {
-            Then("The build should fail with an appropriate error") {
+        When("A walker is built without calling buildGraph") {
+            Then("The build fails with a missing graph validation error") {
                 shouldThrow<IllegalStateException> {
                     buildWalker<TestVertex, String> {}
                 }
             }
         }
 
-        When("Setting a correct start vertex and then changing to a non-existent vertex") {
-            Then("The build should fail with a vertex not found error") {
+        When("The start vertex is changed to a non-existent vertex after graph construction") {
+            Then("The build fails with a vertex not found validation error") {
                 shouldThrow<IllegalStateException> {
                     buildWalker {
                         buildGraph(IntVertex(1)) {

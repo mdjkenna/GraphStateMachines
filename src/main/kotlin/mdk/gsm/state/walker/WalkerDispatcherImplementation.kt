@@ -9,7 +9,6 @@ import mdk.gsm.action.CompletableAction
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.GsmController
-import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.state.TransitionState
 
 /**
@@ -20,13 +19,13 @@ import mdk.gsm.state.TransitionState
  *
  * @param V The type of vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param F The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
+ * @param G The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
  * @param A The type of action arguments that can be passed when dispatching actions.
  */
-internal class WalkerDispatcherImplementation<V, I, F, A> private constructor(
+internal class WalkerDispatcherImplementation<V, I, G, A> private constructor(
     private val scope: CoroutineScope,
     private val actionChannel: Channel<CompletableAction<V, I, A>>
-) : WalkerDispatcher<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+) : WalkerDispatcher<V, I, G, A> where V : IVertex<I> {
 
     override fun launchDispatch(action: GraphStateMachineAction.Next) {
         scope.launch {
@@ -91,13 +90,13 @@ internal class WalkerDispatcherImplementation<V, I, F, A> private constructor(
     }
 
     companion object {
-        internal fun <V, I, F, A> create(
-            gsm: GsmController<V, I, F, A>,
+        internal fun <V, I, G, A> create(
+            gsm: GsmController<V, I, G, A>,
             singleThreadedScope: CoroutineScope,
             actionChannel: Channel<CompletableAction<V, I, A>> = Channel(Channel.UNLIMITED)
-        ): WalkerDispatcherImplementation<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+        ): WalkerDispatcherImplementation<V, I, G, A> where V : IVertex<I> {
 
-            val walkerDispatcherImplementation: WalkerDispatcherImplementation<V, I, F, A> = WalkerDispatcherImplementation(
+            val walkerDispatcherImplementation: WalkerDispatcherImplementation<V, I, G, A> = WalkerDispatcherImplementation(
                 singleThreadedScope,
                 actionChannel
             )

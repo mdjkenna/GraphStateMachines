@@ -17,12 +17,12 @@ import mdk.gsm.state.ITransitionGuardState
  *
  * @param V The type of vertices stored in this graph. Must implement [IVertex].
  * @param I The type of the vertex ID. Must correspond to the type parameter of [IVertex] implemented by [V].
- * @param F The type of transition guard state used for edge transitions. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state used for edge transitions. Must implement [ITransitionGuardState].
  * @param A The type of action argument
  */
-class Graph<V, I, F, A> internal constructor(
-    private val map: Map<I, VertexContainer<V, I, F, A>>
-) where V : IVertex<I>, F : ITransitionGuardState {
+class Graph<V, I, G, A> internal constructor(
+    private val map: Map<I, VertexContainer<V, I, G, A>>
+) where V : IVertex<I> {
 
     fun containsVertex(vertex: V): Boolean {
         return map.containsKey(vertex.id)
@@ -36,20 +36,21 @@ class Graph<V, I, F, A> internal constructor(
         return map[id]?.vertex
     }
 
-    fun getOutgoingEdgesSorted(vertex: V): List<Edge<V, I, F, A>>? {
+    fun getOutgoingEdgesSorted(vertex: V): List<Edge<V, I, G, A>>? {
         return map[vertex.id]?.adjacentOrdered
     }
 
-    internal fun getVertexContainer(id: I): VertexContainer<V, I, F, A>? {
+    internal fun getVertexContainer(id: I): VertexContainer<V, I, G, A>? {
         return map[id]
     }
 
-
-    internal fun getAllVertices(): List<V> {
+    fun getAllVertices(): List<V> {
         return map.values.map { it.vertex }
     }
 
-    internal fun getAllEdges(): List<Edge<V, I, F, A>> {
-        return map.values.flatMap { it.adjacentOrdered }
+    fun getAllEdges(): List<Edge<V, I, G, A>> {
+        return map.values.flatMap {
+            it.adjacentOrdered
+        }
     }
 }

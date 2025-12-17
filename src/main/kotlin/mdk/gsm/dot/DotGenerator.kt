@@ -5,7 +5,7 @@ import mdk.gsm.dot.decorations.TransitionGuardDecoration
 import mdk.gsm.dot.decorations.VertexDecoration
 import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.GraphSupplier
 
 /**
  * Generator for DOT language representation of a Graph State Machine.
@@ -13,13 +13,13 @@ import mdk.gsm.state.ITransitionGuardState
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of traversal guard state. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state.
  * @param A The type of arguments that can be passed with actions.
  * @param config Configuration for DOT graph layout and appearance.
  */
-class DotGenerator<V, I, F, A>(
+class DotGenerator<V, I, G, A>(
     private val config: DotConfig = DotConfig()
-) where V : IVertex<I>, F : ITransitionGuardState {
+) where V : IVertex<I> {
 
     private val vertexDecorations = mutableMapOf<I, VertexDecoration>()
     private val edgeDecorations = mutableMapOf<Pair<I, I>, EdgeDecoration>()
@@ -32,7 +32,7 @@ class DotGenerator<V, I, F, A>(
      * @param decoration The decoration to apply
      * @return This generator instance for method chaining
      */
-    fun decorateVertex(vertexId: I, decoration: VertexDecoration): DotGenerator<V, I, F, A> {
+    fun decorateVertex(vertexId: I, decoration: VertexDecoration): DotGenerator<V, I, G, A> {
         vertexDecorations[vertexId] = decoration
         return this
     }
@@ -45,7 +45,7 @@ class DotGenerator<V, I, F, A>(
      * @param decoration The decoration to apply
      * @return This generator instance for method chaining
      */
-    fun decorateEdge(fromId: I, toId: I, decoration: EdgeDecoration): DotGenerator<V, I, F, A> {
+    fun decorateEdge(fromId: I, toId: I, decoration: EdgeDecoration): DotGenerator<V, I, G, A> {
         edgeDecorations[Pair(fromId, toId)] = decoration
         return this
     }
@@ -58,22 +58,14 @@ class DotGenerator<V, I, F, A>(
      * @param decoration The decoration to apply
      * @return This generator instance for method chaining
      */
-    fun decorateTransitionGuard(fromId: I, toId: I, decoration: TransitionGuardDecoration): DotGenerator<V, I, F, A> {
+    fun decorateTransitionGuard(fromId: I, toId: I, decoration: TransitionGuardDecoration): DotGenerator<V, I, G, A> {
         guardDecorations[Pair(fromId, toId)] = decoration
         return this
     }
 
-    /**
-     * Generate DOT language representation of the graph.
-     *
-     * @param graph The graph to visualize
-     * @param graphName Optional name for the graph
-     * @param dotConfig Optional configuration to override the default config
-     * @return String containing the DOT language representation
-     */
-    fun generateDot(
-        graph: Graph<V, I, F, A>, 
-        graphName: String = "GraphStateMachine",
+    private fun generateDotInternal(
+        graph: Graph<V, I, G, A>, 
+        graphName: String = "",
         dotConfig: DotConfig = config
     ): String {
         val sb = StringBuilder()
@@ -130,7 +122,7 @@ class DotGenerator<V, I, F, A>(
                         if (dotConfig.showEdgeIndices) {
                             append("\\n")
                         }
-                        append("${edgeDecoration.description}")
+                        append(edgeDecoration.description)
                     }
                     append("\"")
                 }
@@ -152,5 +144,37 @@ class DotGenerator<V, I, F, A>(
         sb.appendLine("}")
 
         return sb.toString()
+    }
+
+    /**
+     * Generate DOT language representation from a state machine.
+     *
+     * Pass a [mdk.gsm.state.traverser.Traverser] or [mdk.gsm.state.walker.Walker] to generate
+     * a DOT representation of its graph structure.
+     *
+     * @param stateMachine The state machine whose graph should be visualized
+     * @param graphName Optional name for the graph
+     * @param dotConfig Optional configuration to override the default config
+     * @return String containing the DOT language representation
+     */
+    fun generateDot(
+        stateMachine: GraphSupplier<V, I, G, A>,
+        graphName: String = "",
+        dotConfig: DotConfig = config
+    ): String {
+        return generateDotInternal(stateMachine.graph, graphName, dotConfig)
+    }
+
+    companion object {
+
+        fun <V, I, G, A> generateDotFromMachine(
+            stateMachine: GraphSupplier<V, I, G, A>,
+            config: DotConfig = DotConfig(),
+            dotGeneration: DotGenerator<V, I, G, A>.() -> Unit = {}
+        ): String where V : IVertex<I> {
+            val dotGenerator = DotGenerator<V, I, G, A>(config)
+            dotGeneration(dotGenerator)
+            return dotGenerator.generateDot(stateMachine)
+        }
     }
 }

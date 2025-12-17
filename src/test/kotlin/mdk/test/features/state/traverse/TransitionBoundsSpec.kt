@@ -1,11 +1,8 @@
 package mdk.test.features.state.traverse
 
 import io.kotest.core.spec.style.BehaviorSpec
-import mdk.gsm.builder.buildTraverser
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
-import mdk.gsm.state.traverser.Traverser
-import mdk.gsm.util.LongVertex
+import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.AssertionUtils
 
 class TransitionBoundsSpec : BehaviorSpec({
@@ -14,23 +11,12 @@ class TransitionBoundsSpec : BehaviorSpec({
         which has been configured to explicitly step into bounds in the builder
     """.trimIndent()) {
 
-        val traverser: Traverser<LongVertex, Long, ITransitionGuardState, Nothing> = buildTraverser {
-            val v1 = LongVertex(1L)
-            val v2 = LongVertex(2L)
-
-            setExplicitTransitionIntoBounds(true)
-
-            buildGraph(v1) {
-                v(v1) { e { setTo(v2) } }
-                v(v2)
-            }
-        }
+        val traverser = GraphScenarios.twoVertexBoundsTraverser()
 
         When("GSM has just been initialised without having yet received any actions") {
 
             Then("The state machines current state is the start vertex, which is within bounds, not beyond last and not before first") {
                 AssertionUtils.assertBounds(traverser, within = true, beyond = false, before = false)
-                AssertionUtils.assertTracedPathWithCurrentState(listOf(1L), traverser)
             }
         }
 

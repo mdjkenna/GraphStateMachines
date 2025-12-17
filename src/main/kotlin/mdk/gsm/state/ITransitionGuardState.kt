@@ -20,7 +20,3 @@ interface ITransitionGuardState {
      */
     fun onReset()
 }
-
-object NoTransitionGuardState : ITransitionGuardState {
-    override fun onReset() = Unit
-}

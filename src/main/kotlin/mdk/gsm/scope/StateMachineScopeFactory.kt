@@ -7,10 +7,10 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.*
 import java.util.concurrent.Executors
 
-object GraphStateMachineScopeFactory {
-    private val GraphStateMachineDispatcher by lazy {
+object StateMachineScopeFactory {
+    private val StateMachineDispatcher by lazy {
         val singleThreadExecutor = Executors.newSingleThreadExecutor { r ->
-            Thread(r, "GraphStateMachine-Thread-${UUID.randomUUID().toString()}")
+            Thread(r, "GraphStateMachine-Thread-${UUID.randomUUID()}")
         }
 
         singleThreadExecutor.asCoroutineDispatcher()
@@ -18,7 +18,7 @@ object GraphStateMachineScopeFactory {
 
     fun newScope(dispatcher : CoroutineDispatcher? = null): CoroutineScope {
         val coroutineDispatcher = dispatcher
-            ?: GraphStateMachineDispatcher
+            ?: StateMachineDispatcher
 
         return CoroutineScope(coroutineDispatcher + SupervisorJob())
     }

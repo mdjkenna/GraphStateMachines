@@ -15,18 +15,18 @@ import mdk.gsm.graph.IVertex
  *
  * @param V The type of vertices in the graph. Must implement [mdk.gsm.graph.IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state. Must implement [ITransitionGuardState].
  * @param A The type of arguments that can be passed with actions.
  *
  * @see BeforeVisitHandler
  * @see mdk.gsm.graph.VertexContainer
  */
 @GsmBuilderScope
-class BeforeVisitScope<V, I, F, A>(
+class BeforeVisitScope<V, I, G, A>(
     val vertex: V,
-    val guardState: F,
+    val guardState: G?,
     val args : A?
-) where V : IVertex<I>, F : ITransitionGuardState {
+) where V : IVertex<I> {
 
     internal var autoAdvanceTrigger = false
 
@@ -59,10 +59,10 @@ class BeforeVisitScope<V, I, F, A>(
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state. Must implement [ITransitionGuardState].
  * @param A The type of arguments that can be passed with actions.
  *
  * @see BeforeVisitScope
  * @see mdk.gsm.builder.VertexBuilderScope.onBeforeVisit
  */
-typealias BeforeVisitHandler<V, I, F, A> = suspend BeforeVisitScope<V, I, F, A>.() -> Unit
+typealias BeforeVisitHandler<V, I, G, A> = suspend BeforeVisitScope<V, I, G, A>.() -> Unit

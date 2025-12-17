@@ -1,15 +1,18 @@
 package mdk.gsm.state.traverser
 
 import kotlinx.coroutines.flow.StateFlow
+import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.GsmController
-import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.state.TransitionState
 
 
-internal class TraverserStateImplementation<V, I, F, A> private constructor(
-    val gsm: GsmController<V, I, F, A>
-) : TraverserState<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+internal class TraverserStateImplementation<V, I, G, A> private constructor(
+    val gsm: GsmController<V, I, G, A>
+) : TraverserState<V, I, G, A> where V : IVertex<I> {
+
+    val graph: Graph<V, I, G, A>
+        get() = gsm.graph
 
     override val current: StateFlow<TransitionState<V, I, A>>
         get() = gsm.stateOut
@@ -19,9 +22,9 @@ internal class TraverserStateImplementation<V, I, F, A> private constructor(
     }
 
     companion object {
-        internal fun <V, I, F, A> create(
-            gsm: GsmController<V, I, F, A>
-        ): TraverserStateImplementation<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+        internal fun <V, I, G, A> create(
+            gsm: GsmController<V, I, G, A>
+        ): TraverserStateImplementation<V, I, G, A> where V : IVertex<I> {
             return TraverserStateImplementation(gsm)
         }
     }

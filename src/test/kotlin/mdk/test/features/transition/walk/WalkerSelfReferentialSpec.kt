@@ -2,23 +2,24 @@ package mdk.test.features.transition.walk
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import mdk.gsm.builder.buildWalker
+import mdk.gsm.builder.buildGuardedWalker
+import mdk.gsm.scope.StateMachineScopeFactory
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.util.StringVertex
 
 class WalkerSelfReferentialSpec : BehaviorSpec({
 
-    var cycleCount = 0
-    val transitionGuardState = object : ITransitionGuardState {
-        override fun onReset() { cycleCount = 0 }
-    }
+    Given("A walker with a self-referential vertex limited to 7 cycles by guard state") {
+        var cycleCount = 0
+        val transitionGuardState = object : ITransitionGuardState {
+            override fun onReset() { cycleCount = 0 }
+        }
 
-    Given("A walker with a vertex that references itself and has a traversal guard limiting to 7 cycles") {
-        val walker = buildWalker<StringVertex, String, ITransitionGuardState>(transitionGuardState) {
-            val v1 = StringVertex("1")
-            val v2 = StringVertex("2")
+        val v1 = StringVertex("1")
+        val v2 = StringVertex("2")
 
+        val walker = buildGuardedWalker(transitionGuardState, StateMachineScopeFactory.newScope()) {
             buildGraph(v1) {
                 addVertex(v1) {
                     addEdge {
@@ -73,7 +74,7 @@ class WalkerSelfReferentialSpec : BehaviorSpec({
             repeat(5) {
                 walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
             }
-          walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+            walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
 
             Then("The walker should proceed to vertex '2' after 5 more cycles (total of 7)") {
                 walker.current.value.vertex.id shouldBe "2"

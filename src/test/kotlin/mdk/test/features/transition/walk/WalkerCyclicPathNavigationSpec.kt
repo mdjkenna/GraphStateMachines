@@ -2,20 +2,14 @@ package mdk.test.features.transition.walk
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import mdk.gsm.builder.buildWalker
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.walker.Walker
+import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.Test15VertexTransitionArgs
-import mdk.test.utils.TestVertex
 
 class WalkerCyclicPathNavigationSpec : BehaviorSpec({
-
-    Given("A walker with a graph containing multiple cyclic paths") {
-
+    Given("A 15-vertex walker with multiple cyclic paths") {
         val transitionGuardState = Test15VertexTransitionArgs()
-        val walker = build15VertexWalker(
-            transitionGuardState = transitionGuardState
-        )
+        val walker = GraphScenarios.complex15VertexWalker(transitionGuardState)
 
         When("The walker has multiple NEXT actions dispatched that take it through a cyclic path which is unblocked") {
             // First cycle: 1 -> 2 -> 4 -> 6 -> 3 -> 2 (repeat)
@@ -124,149 +118,4 @@ class WalkerCyclicPathNavigationSpec : BehaviorSpec({
             }
         }
     }
-}) {
-    companion object {
-        fun build15VertexWalker(
-            transitionGuardState: Test15VertexTransitionArgs
-        ): Walker<TestVertex, String, Test15VertexTransitionArgs, Nothing> {
-            return buildWalker(transitionGuardState) {
-                val v1 = TestVertex("1")
-                val v2 = TestVertex("2")
-                val v3 = TestVertex("3")
-                val v4 = TestVertex("4")
-                val v5 = TestVertex("5")
-                val v6 = TestVertex("6")
-                val v7 = TestVertex("7")
-                val v8 = TestVertex("8")
-                val v9 = TestVertex("9")
-                val v10 = TestVertex("10")
-                val v11 = TestVertex("11")
-                val v12 = TestVertex("12")
-                val v13 = TestVertex("13")
-                val v14 = TestVertex("14")
-                val v15 = TestVertex("15")
-
-                buildGraph(v1) {
-                    addVertex(v1) {
-                        addEdge {
-                            setTo(v2)
-                        }
-                        addEdge {
-                            setTo(v3)
-                        }
-                    }
-
-                    addVertex(v2) {
-                        addEdge {
-                            setTo(v4)
-                        }
-                    }
-
-                    addVertex(v3) {
-                        addEdge {
-                            setTo(v2)
-                            setEdgeTransitionGuard {
-                                !guardState.blockedFrom3To2
-                            }
-                        }
-
-                        addEdge {
-                            setTo(v7)
-                        }
-
-                        addEdge {
-                            setTo(v5)
-                        }
-                    }
-
-                    addVertex(v4) {
-                        addEdge {
-                            setTo(v6)
-                        }
-                    }
-
-                    addVertex(v5) {
-                        addEdge {
-                            setTo(v8)
-                        }
-                    }
-
-                    addVertex(v6) {
-                        addEdge {
-                            setTo(v3)
-                        }
-                        addEdge {
-                            setTo(v8)
-                        }
-                    }
-
-                    addVertex(v7) {
-                        addEdge {
-                            setTo(v8)
-                        }
-                    }
-
-                    addVertex(v8) {
-                        addEdge {
-                            setTo(v9)
-                            setEdgeTransitionGuard {
-                                !guardState.blockedFrom8To9
-                            }
-                        }
-                        addEdge {
-                            setTo(v10)
-                        }
-                    }
-
-                    addVertex(v9) {
-                        addEdge {
-                            setTo(v11)
-                        }
-                    }
-
-                    addVertex(v10) {
-                        addEdge {
-                            setTo(v11)
-                        }
-                    }
-
-                    addVertex(v11) {
-                        addEdge {
-                            setTo(v12)
-                        }
-                        addEdge {
-                            setTo(v13)
-                        }
-                    }
-
-                    addVertex(v12) {
-                        addEdge {
-                            setTo(v14)
-                        }
-                    }
-
-                    addVertex(v13) {
-                        addEdge {
-                            setTo(v14)
-                        }
-                    }
-
-                    addVertex(v14) {
-                        addEdge {
-                            setTo(v5)
-                        }
-                        addEdge {
-                            setTo(v15)
-                        }
-                    }
-
-                    addVertex(v15) {
-                        addEdge {
-                            setTo(v2)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+})

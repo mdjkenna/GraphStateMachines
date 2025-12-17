@@ -7,19 +7,18 @@ import mdk.gsm.graph.transition.IForwardTransition
 import mdk.gsm.graph.transition.IPathTraceable
 import mdk.gsm.graph.transition.IPreviousTransition
 import mdk.gsm.graph.transition.IResettable
-import mdk.gsm.state.ITransitionGuardState
 
-internal class CyclicDfsGraphTraversal<V, I, F, A>(
-    private val graph: Graph<V, I, F, A>,
+internal class CyclicDfsGraphTraversal<V, I, G, A>(
+    private val graph: Graph<V, I, G, A>,
     private val startVertex: V,
-) : IForwardTransition<V, I, F, A>, IPreviousTransition<V, I, F, A>, IResettable<V>, IPathTraceable<V> where V : IVertex<I>, F : ITransitionGuardState {
+) : IForwardTransition<V, I, G, A>, IPreviousTransition<V, I, G, A>, IResettable<V>, IPathTraceable<V> where V : IVertex<I> {
 
     private var traversalPath = TraversalPath<V, I, A>(startVertex)
 
     private val visited: HashMap<I, Int> = HashMap()
 
     override suspend fun moveNext(
-        guardState: F,
+        guardState: G?,
         autoAdvance: Boolean,
         args: A?
     ): TraversalPathNode<V, A>? {
@@ -54,7 +53,7 @@ internal class CyclicDfsGraphTraversal<V, I, F, A>(
 
     private suspend fun nextVertexOrNull(
         vertex: V,
-        flags: F,
+        flags: G?,
         args : A?
     ): V? {
 
@@ -117,7 +116,7 @@ internal class CyclicDfsGraphTraversal<V, I, F, A>(
         return traversalPath.tracePath()
     }
 
-    override fun getVertexContainer(id: I): VertexContainer<V, I, F, A>? {
+    override fun getVertexContainer(id: I): VertexContainer<V, I, G, A>? {
         return graph.getVertexContainer(id)
     }
 }

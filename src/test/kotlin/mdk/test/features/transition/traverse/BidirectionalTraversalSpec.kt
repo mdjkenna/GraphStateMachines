@@ -2,13 +2,11 @@ package mdk.test.features.transition.traverse
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.datatest.withData
-import mdk.gsm.builder.buildTraverser
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.ITransitionGuardState
 import mdk.gsm.state.traverser.Traverser
-import mdk.gsm.util.StringVertex
 import mdk.test.utils.AssertionUtils
 import mdk.test.utils.AssertionUtils.assertTracedPathWithCurrentState
 import mdk.test.utils.TestBuilderUtils
@@ -26,7 +24,7 @@ class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
 
     Given("A graph state machine which is subjected to traversal in both next and previous directions") {
 
-        withData(
+        withData(nameFn = { it.title },
             listOf<TestParameters>(
                 createParam1("11 Vertex DAG Acyclic", EdgeTraversalType.DFSAcyclic),
                 createParam1("11 Vertex DAG Cyclic", EdgeTraversalType.DFSCyclic),
@@ -36,6 +34,8 @@ class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
         ) { param: TestParameters ->
 
             When("Traversing the entire graph forward") {
+                param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
+
                 Then("the traversal should visit all vertices in the expected order") {
                     AssertionUtils.assertExpectedPathGoingNextUntilEnd(
                         param.traverser,
@@ -45,7 +45,14 @@ class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
             }
 
             When("Traversing the entire graph backward once the end is reached after traversing forwards") {
+                param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
+
                 Then("the traversal should visit all vertices in reverse order") {
+                    AssertionUtils.assertExpectedPathGoingNextUntilEnd(
+                        param.traverser,
+                        param.expectedForwardPath
+                    )
+
                     AssertionUtils.assertExpectedPathGoingPreviousUntilStart(
                         param.traverser,
                         param.expectedForwardPath.reversed()
@@ -54,90 +61,170 @@ class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
             }
 
             When("Performing staggered navigation with Next-Next-Previous pattern after traversing all the way previous from the end") {
-                Then("Each step should visit the correct sequence of vertices") {
-                    val expectedPathSize = param.expectedForwardPath.size
-                    val expectedForwardPath = param.expectedForwardPath
+                val expectedPathSize = param.expectedForwardPath.size
+                val expectedForwardPath = param.expectedForwardPath
+                val lastIndex = expectedPathSize - 1
 
-                    param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
-
-                    val lastIndex = expectedPathSize.dec()
-                    for (i in 0 until expectedPathSize.dec()) {
-                        val next1Index = if (i < lastIndex) i + 1 else i
-                        val next2Index = if (i < lastIndex - 1) next1Index + 1 else next1Index
-                        val prevIndex = if (i < lastIndex - 1) next1Index else i
-
+                Then("Baseline at each index matches the expected path") {
+                    for (i in 0 until lastIndex) {
+                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
+                        var step = 0
+                        while (step < i) {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+                            step++
+                        }
                         assertTracedPathWithCurrentState(
                             expectedForwardPath.slice(0..i),
                             param.traverser
                         )
+                    }
+                }
 
-                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+                Then("After first Next at each index matches the expected path") {
+                    for (i in 0 until lastIndex) {
+                        val next1Index = i + 1
+                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
+                        var step = 0
+                        while (step < next1Index) {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+                            step++
+                        }
                         assertTracedPathWithCurrentState(
                             expectedForwardPath.slice(0..next1Index),
-                            param.traverser,
-
+                            param.traverser
                         )
+                    }
+                }
 
-                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+                Then("After second Next at each index matches the expected path") {
+                    for (i in 0 until lastIndex) {
+                        val next1Index = i + 1
+                        val next2Index = if (i < lastIndex - 1) next1Index + 1 else next1Index
+                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
+                        var step = 0
+                        while (step < next2Index) {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+                            step++
+                        }
                         assertTracedPathWithCurrentState(
                             expectedForwardPath.slice(0..next2Index),
-                            param.traverser,
-
+                            param.traverser
                         )
+                    }
+                }
 
+                Then("After Previous at each index matches the expected path") {
+                    for (i in 0 until lastIndex) {
+                        val next1Index = i + 1
+                        val next2Index = if (i < lastIndex - 1) next1Index + 1 else next1Index
+                        val prevIndex = if (i < lastIndex - 1) next1Index else i
+                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
+                        var step = 0
+                        while (step < next2Index) {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+                            step++
+                        }
                         param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
                         assertTracedPathWithCurrentState(
                             expectedForwardPath.slice(0..prevIndex),
-                            param.traverser,
+                            param.traverser
                         )
                     }
                 }
             }
 
             When("Performing staggered backward navigation with Previous-Previous-Next pattern") {
-                Then("Each step should visit the correct sequence of vertices") {
-                    val expectedPathSize = param.expectedForwardPath.size
-                    val expectedForwardPath = param.expectedForwardPath
+                val expectedPathSize = param.expectedForwardPath.size
+                val expectedForwardPath = param.expectedForwardPath
 
-                    param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
-                    var nextCount = 0
-                    do {
-                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
-                        nextCount++
-                    } while (param.traverser.current.value.isWithinBounds && nextCount < expectedPathSize)
-
+                Then("Baseline from end to each index matches the expected path") {
                     for (i in expectedPathSize.dec() downTo 1) {
-                        val prev1Index = if (i > 1) i - 1 else 0
-                        val prev2Index = if (i >= 2) prev1Index - 1 else 0
-                        val nextIndex = if (i > 1) prev1Index else i
-
+                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
+                        var count = 0
+                        do {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+                            count++
+                        } while (param.traverser.current.value.isWithinBounds && count < expectedPathSize)
+                        while (param.traverser.tracePath().size - 1 > i) {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
+                        }
                         assertTracedPathWithCurrentState(
                             expectedForwardPath.slice(0..i),
-                            param.traverser,
-
+                            param.traverser
                         )
+                    }
+                }
+
+                Then("After first Previous at each index matches the expected path") {
+                    for (i in expectedPathSize.dec() downTo 1) {
+                        val prev1Index = if (i > 1) i - 1 else 0
+                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
+                        var count = 0
+                        do {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+                            count++
+                        } while (param.traverser.current.value.isWithinBounds && count < expectedPathSize)
+
+                        while (param.traverser.tracePath().size - 1 > i) {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
+                        }
 
                         param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
                         assertTracedPathWithCurrentState(
                             expectedForwardPath.slice(0..prev1Index),
-                            param.traverser,
-
+                            param.traverser
                         )
+                    }
+                }
 
-                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
+                Then("After second Previous at applicable indices matches the expected path") {
+                    for (i in expectedPathSize.dec() downTo 1) {
                         if (i > 1) {
+                            val prev1Index = i - 1
+                            val prev2Index = prev1Index - 1
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
+                            var count = 0
+                            do {
+                                param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+                                count++
+                            } while (param.traverser.current.value.isWithinBounds && count < expectedPathSize)
+
+                            while (param.traverser.tracePath().size - 1 > i) {
+                                param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
+                            }
+
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
+
                             assertTracedPathWithCurrentState(
                                 expectedForwardPath.slice(0..prev2Index),
-                                param.traverser,
-
+                                param.traverser
                             )
                         }
+                    }
+                }
 
+                Then("After Next at each index matches the expected path") {
+                    for (i in expectedPathSize.dec() downTo 1) {
+                        val prev1Index = if (i > 1) i - 1 else 0
+                        val nextIndex = if (i > 1) prev1Index else i
+                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
+                        var count = 0
+                        do {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+                            count++
+                        } while (param.traverser.current.value.isWithinBounds && count < expectedPathSize)
+                        while (param.traverser.tracePath().size - 1 > i) {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
+                        }
+                        param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
+                        if (i > 1) {
+                            param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
+                        }
                         param.traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
                         assertTracedPathWithCurrentState(
                             expectedForwardPath.slice(0..nextIndex),
-                            param.traverser,
-
+                            param.traverser
                         )
                     }
                 }
@@ -163,69 +250,10 @@ class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
         }
 
         private fun createParam1(title: String, edgeTraversalType: EdgeTraversalType): TestParameters {
-            val traverser = buildTraverser(
-                TestTransitionGuardState()
-            ) {
-                val step1 = StringVertex("1")
-                setTraversalType(edgeTraversalType)
-
-                buildGraph(step1) {
-                    val step2a = StringVertex("2A")
-                    val step2b = StringVertex("2B")
-                    val step3a = StringVertex("3A")
-                    val step3b = StringVertex("3B")
-                    val step3c = StringVertex("3C")
-                    val step4a = StringVertex("4A")
-                    val step4b = StringVertex("4B")
-                    val step5 = StringVertex("5")
-                    val step6 = StringVertex("6")
-                    val step7 = StringVertex("7")
-
-                    addVertex(step1) {
-                        addEdge { setTo(step2a) }
-                        addEdge { setTo(step2b) }
-                    }
-
-                    addVertex(step2a) {
-                        addEdge { setTo(step3a) }
-                        addEdge { setTo(step3b) }
-                    }
-
-                    addVertex(step2b) {
-                        addEdge { setTo(step3c) }
-                    }
-
-                    addVertex(step3a) {
-                        addEdge { setTo(step4a) }
-                    }
-
-                    addVertex(step3b) {
-                        addEdge { setTo(step4b) }
-                    }
-
-                    addVertex(step3c) {
-                        addEdge { setTo(step4b) }
-                    }
-
-                    addVertex(step4a) {
-                        addEdge { setTo(step5) }
-                    }
-
-                    addVertex(step4b) {
-                        addEdge { setTo(step6) }
-                    }
-
-                    addVertex(step5) {
-                        addEdge { setTo(step7) }
-                    }
-
-                    addVertex(step6) {
-                        addEdge { setTo(step7) }
-                    }
-
-                    addVertex(step7) {}
-                }
-            }
+            val traverser = mdk.test.scenarios.GraphScenarios.elevenVertexDAGTraverser(
+                TestTransitionGuardState(),
+                edgeTraversalType
+            )
 
             return TestParameters(
                 title,

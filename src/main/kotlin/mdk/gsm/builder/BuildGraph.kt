@@ -5,7 +5,6 @@ package mdk.gsm.builder
 import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.VertexContainer
-import mdk.gsm.state.ITransitionGuardState
 
 @DslMarker
 internal annotation class GsmBuilderScope
@@ -32,16 +31,38 @@ internal annotation class GsmBuilderScope
  *
  * @param V The type of vertices (states). Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state. Defaults to Nothing.
  * @param A The type of per-action arguments carried by actions (if used by the state machine).
  * @param scopeConsumer DSL for declaring vertices and edges within the graph being built.
  * @return A fully constructed [Graph].
  */
 @GsmBuilderScope
-fun <V, I, F, A> buildGraphOnly(
-    scopeConsumer : GraphBuilderScope<V, I, F, A>.() -> Unit
-) : Graph<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
-    val graphBuilder = GraphBuilder<V, I, F, A>()
+fun <V, I, G, A> buildGraphOnly(
+    scopeConsumer : GraphBuilderScope<V, I, G, A>.() -> Unit
+) : Graph<V, I, G, A> where V : IVertex<I> {
+    val graphBuilder = GraphBuilder<V, I, G, A>()
+    val graphBuilderScope = GraphBuilderScope(graphBuilder)
+    scopeConsumer(graphBuilderScope)
+
+    return graphBuilder.build()
+}
+
+/**
+ * Builds a graph independently of any state machine.
+ *
+ * Use this when you want to construct a reusable [Graph] and / or supply it later to a
+ * traverser/walker builder (for example, via `setWorkflowGraph(...)`). The graph contains
+ * vertices and their outgoing edges with optional transition guards.
+ *
+ * @param V The type of vertices (states). Must implement [IVertex].
+ * @param I The type of vertex identifiers.
+ * @param scopeConsumer DSL for declaring vertices and edges within the graph being built.
+ * @return A fully constructed [Graph].
+ */
+fun <V, I> buildPlainGraphOnly(
+    scopeConsumer : GraphBuilderScope<V, I, Nothing, Nothing>.() -> Unit
+) : Graph<V, I, Nothing, Nothing> where V : IVertex<I> {
+    val graphBuilder = GraphBuilder<V, I, Nothing, Nothing>()
     val graphBuilderScope = GraphBuilderScope(graphBuilder)
     scopeConsumer(graphBuilderScope)
 
@@ -67,10 +88,9 @@ fun <V, I, F, A> buildGraphOnly(
  * }
  * ```
  */
-class GraphBuilderScope<V, I, F, A> internal constructor(
-    private val workflowGraphGraphBuilder: GraphBuilder<V, I, F, A>
-) where V : IVertex<I>, F : ITransitionGuardState
-{
+class GraphBuilderScope<V, I, G, A> internal constructor(
+    private val workflowGraphGraphBuilder: GraphBuilder<V, I, G, A>
+) where V : IVertex<I> {
     /**
      * Adds a vertex to the graph with optional DSL to configure its outgoing edges and handlers.
      *
@@ -94,9 +114,9 @@ class GraphBuilderScope<V, I, F, A> internal constructor(
      */
     fun addVertex(
         vertex: V,
-        scopeConsumer: VertexBuilderScope<V, I, F, A>.() -> Unit = {}
+        scopeConsumer: VertexBuilderScope<V, I, G, A>.() -> Unit = {}
     ) {
-        val vertexContainerBuilder = VertexBuilder<V, I, F, A>(vertex)
+        val vertexContainerBuilder = VertexBuilder<V, I, G, A>(vertex)
         val vertexBuilderScope = VertexBuilderScope(vertexContainerBuilder)
         scopeConsumer(vertexBuilderScope)
 
@@ -109,28 +129,28 @@ class GraphBuilderScope<V, I, F, A> internal constructor(
      */
     fun v(
         vertex: V,
-        scopeConsumer: VertexBuilderScope<V, I, F, A>.() -> Unit = {}
+        scopeConsumer: VertexBuilderScope<V, I, G, A>.() -> Unit = {}
     ) = addVertex(vertex, scopeConsumer)
 }
 
-internal class GraphBuilder<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
-    private val map = HashMap<I, VertexContainer<V, I, F, A>>()
+internal class GraphBuilder<V, I, G, A> where V : IVertex<I> {
+    private val map = HashMap<I, VertexContainer<V, I, G, A>>()
 
-    fun add(vertexContainer: VertexContainer<V, I, F, A>) {
+    fun add(vertexContainer: VertexContainer<V, I, G, A>) {
         val existingValue = map.put(vertexContainer.vertex.id, vertexContainer)
         check(existingValue == null) {
             "A vertex with the id ${vertexContainer.vertex.id} already exists in the graph."
         }
     }
 
-    fun build() : Graph<V, I, F, A> {
+    fun build() : Graph<V, I, G, A> {
         assertNoDanglingEdges()
 
         return Graph(map)
     }
 
     private fun assertNoDanglingEdges() {
-        map.forEach { _, vertexContainer ->
+        map.forEach { (_, vertexContainer) ->
             vertexContainer.adjacentOrdered.forEach { edge ->
                 checkNotNull(map[edge.to]) {
                     "The vertex pointed to by the edge from ${vertexContainer.vertex.id} to ${edge.to} is missing"

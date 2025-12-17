@@ -10,17 +10,17 @@ import mdk.gsm.graph.IVertex
  *
  * @param V The type of vertices in the graph. Must implement [mdk.gsm.graph.IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state. Must implement [ITransitionGuardState].
  * @param A The type of arguments that can be passed with actions.
  *
  * @see OutgoingTransitionHandler
  */
 @GsmBuilderScope
-class OutgoingTransitionScope<V, I, F, A>(
+class OutgoingTransitionScope<V, I, G, A>(
     val args: A?,
-    val guardState: F,
+    val guardState: G?,
     val vertex: V
-) where V : IVertex<I>, F : ITransitionGuardState {
+) where V : IVertex<I> {
 
     internal var noChange = false
 
@@ -47,10 +47,10 @@ class OutgoingTransitionScope<V, I, F, A>(
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param F The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state. Must implement [ITransitionGuardState].
  * @param A The type of arguments that can be passed with actions.
  *
  * @see OutgoingTransitionScope
  * @see mdk.gsm.builder.VertexBuilderScope.onOutgoingTransition
  */
-typealias OutgoingTransitionHandler<V, I, F, A> = suspend OutgoingTransitionScope<V, I, F, A>.() -> Unit
+typealias OutgoingTransitionHandler<V, I, G, A> = suspend OutgoingTransitionScope<V, I, G, A>.() -> Unit

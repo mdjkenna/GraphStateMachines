@@ -6,13 +6,12 @@ import mdk.gsm.graph.VertexContainer
 import mdk.gsm.graph.transition.IForwardTransition
 import mdk.gsm.graph.transition.IResettable
 import mdk.gsm.graph.transition.traverse.TraversalPathNode
-import mdk.gsm.state.ITransitionGuardState
 
 
-internal class StatelessGraphWalk<V, I, F, A>(
-    private val graph: Graph<V, I, F, A>,
+internal class StatelessGraphWalk<V, I, G, A>(
+    private val graph: Graph<V, I, G, A>,
     private val startVertex: V,
-) : IForwardTransition<V, I, F, A>, IResettable<V> where V : IVertex<I>, F : ITransitionGuardState {
+) : IForwardTransition<V, I, G, A>, IResettable<V> where V : IVertex<I> {
 
     private var currentVertex: V = startVertex
     private var currentPathNode: TraversalPathNode<V, A> = TraversalPathNode(vertex = startVertex)
@@ -23,7 +22,7 @@ internal class StatelessGraphWalk<V, I, F, A>(
      * and simply follows the first valid edge it finds.
      */
     override suspend fun moveNext(
-        guardState: F,
+        guardState: G?,
         autoAdvance: Boolean,
         args: A?
     ): TraversalPathNode<V, A>? {
@@ -71,7 +70,7 @@ internal class StatelessGraphWalk<V, I, F, A>(
     /**
      * Returns the vertex container for the given ID.
      */
-    override fun getVertexContainer(id: I): VertexContainer<V, I, F, A>? {
+    override fun getVertexContainer(id: I): VertexContainer<V, I, G, A>? {
         return graph.getVertexContainer(id)
     }
 

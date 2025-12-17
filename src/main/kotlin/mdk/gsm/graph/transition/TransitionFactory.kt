@@ -6,17 +6,16 @@ import mdk.gsm.graph.transition.traverse.AcyclicDfsTraversal
 import mdk.gsm.graph.transition.traverse.CyclicDfsGraphTraversal
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.graph.transition.walk.StatelessGraphWalk
-import mdk.gsm.state.ITransitionGuardState
 
 internal object TransitionFactory {
-    fun <V, I, F, A> create(
-        graph: Graph<V, I, F, A>,
+    fun <V, I, G, A> create(
+        graph: Graph<V, I, G, A>,
         startVertex: V,
         useStatelessWalk: Boolean,
         traversalType: EdgeTraversalType = EdgeTraversalType.DFSAcyclic
-    ): TransitionCapabilities<V, I, F, A> where V : IVertex<I>, F : ITransitionGuardState {
+    ): TransitionCapabilities<V, I, G, A> where V : IVertex<I> {
         return if (useStatelessWalk) {
-            val engine = StatelessGraphWalk<V, I, F, A>(graph, startVertex)
+            val engine = StatelessGraphWalk<V, I, G, A>(graph, startVertex)
             TransitionCapabilities(
                 forward = engine,
                 previous = UnsupportedPrevious(),
@@ -24,7 +23,7 @@ internal object TransitionFactory {
                 pathTraceable = UnsupportedPathTraceable()
             )
         } else if (traversalType == EdgeTraversalType.DFSCyclic) {
-            val engine = CyclicDfsGraphTraversal<V, I, F, A>(graph, startVertex)
+            val engine = CyclicDfsGraphTraversal<V, I, G, A>(graph, startVertex)
             TransitionCapabilities(
                 forward = engine,
                 previous = engine,
@@ -32,7 +31,7 @@ internal object TransitionFactory {
                 pathTraceable = engine
             )
         } else {
-            val engine = AcyclicDfsTraversal<V, I, F, A>(graph, startVertex)
+            val engine = AcyclicDfsTraversal<V, I, G, A>(graph, startVertex)
             TransitionCapabilities(
                 forward = engine,
                 previous = engine,
