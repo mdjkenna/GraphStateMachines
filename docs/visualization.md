@@ -46,4 +46,4 @@ This visualization helps in understanding, documenting, communicating and debugg
 
 ---
 
-[← Back to README](../README.md)
+[← Navigate Back](./index.md)

@@ -49,4 +49,4 @@ The transition guard allows the cycle to be taken up to 3 times before blocking 
 
 ---
 
-[← Back to README](../README.md)
+[← Navigate Back](./index.md)

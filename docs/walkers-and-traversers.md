@@ -69,4 +69,4 @@ requiring transition guards to break out of cycles when needed.
 
 ---
 
-[← Back to README](../README.md)
+[← Navigate Back](./index.md)

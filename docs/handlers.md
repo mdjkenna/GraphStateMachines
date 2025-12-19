@@ -66,4 +66,4 @@ They integrate seamlessly with the state machine's single-threaded actor model, 
 
 ---
 
-[← Back to README](../README.md)
+[← Navigate Back](./index.md)
