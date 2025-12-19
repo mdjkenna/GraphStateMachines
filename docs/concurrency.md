@@ -44,4 +44,4 @@ Naturally the state machine can have actions dispatched from multiple threads,
 but if customising its internal coroutine scope be aware that it **must** process actions on a single thread.
 ---
 
-[← Back to README](../README.md)
+[← Navigate Back](./index.md)

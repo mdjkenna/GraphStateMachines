@@ -62,4 +62,4 @@ Intermediate states solve common problems in a more traditional state machine or
 
 ---
 
-[← Back to README](../README.md)
+[← Navigate Back](./index.md)

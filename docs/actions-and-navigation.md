@@ -155,4 +155,4 @@ Dispatching a `Previous` action returns the state with the arguments from the or
 
 ---
 
-[← Back to README](../README.md)
+[← Navigate Back](./index.md)

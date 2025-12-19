@@ -46,7 +46,7 @@ class SelfReferentialSpec : BehaviorSpec({
 
         When("Advancing the state machine forward seven times") {
             repeat(7) {
-                traverser.dispatch(GraphStateMachineAction.Next)
+                traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
             }
 
             Then("The traversal path should contain eight occurrences of vertex '1'") {
@@ -58,7 +58,7 @@ class SelfReferentialSpec : BehaviorSpec({
         }
 
         When("Advancing once more after reaching the cycle guard limit") {
-            traverser.dispatch(GraphStateMachineAction.Next)
+            traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
 
             Then("The traversal should proceed to vertex '2' instead of continuing the cycle") {
                 AssertionUtils.assertTracedPathWithCurrentState(
@@ -70,7 +70,7 @@ class SelfReferentialSpec : BehaviorSpec({
 
         When("Reversing the state machine six steps backward") {
             repeat(6) {
-                traverser.dispatch(GraphStateMachineAction.Previous)
+                traverser.dispatchAndAwaitResult(GraphStateMachineAction.Previous)
             }
 
             Then("The path should be reduced to only three occurrences of vertex '1'") {
@@ -85,7 +85,7 @@ class SelfReferentialSpec : BehaviorSpec({
             cycleCount = 2
 
             repeat(6) {
-                traverser.dispatch(GraphStateMachineAction.Next)
+                traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
             }
 
             Then("The path should contain eight '1' vertices followed by vertex '2'") {
