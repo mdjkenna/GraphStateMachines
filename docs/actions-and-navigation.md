@@ -1,3 +1,8 @@
+---
+layout: default
+title: Actions and Navigation
+---
+
 # Actions and Navigation
 
 ## Basic Actions
@@ -155,4 +160,4 @@ Dispatching a `Previous` action returns the state with the arguments from the or
 
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)

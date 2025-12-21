@@ -1,3 +1,8 @@
+---
+layout: default
+title: Destructuring
+---
+
 # Destructuring
 
 Both traversers and walkers support Kotlin's destructuring syntax, 
@@ -15,4 +20,4 @@ The above enables controlled access and can be conducive to separation of concer
 
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)

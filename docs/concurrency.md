@@ -1,3 +1,8 @@
+---
+layout: default
+title: Concurrency
+---
+
 # Concurrency
 
 Both `Traversers` and `Walkers` use an actor model, processing actions sequentially on a single-threaded event loop.
@@ -44,4 +49,4 @@ Naturally the state machine can have actions dispatched from multiple threads,
 but if customising its internal coroutine scope be aware that it **must** process actions on a single thread.
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)

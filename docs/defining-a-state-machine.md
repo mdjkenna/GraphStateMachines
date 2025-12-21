@@ -1,9 +1,13 @@
+---
+layout: default
+title: Defining a State Machine
+---
+
 # Defining a State Machine
 
 The following 8 vertex directed acyclic graph can be represented easily in the graph builder DSL:
 
-<!--suppress CheckImageSize -->
-<img src="../8VertexDAG.png" alt="Example Image" width="200"/>
+<img src="../8VertexDAG.png" alt="Example 8-vertex DAG" width="200">
 
 _The above graph image was made using a dot language representation of the 8 vertex DAG in the example below and inputting this into GraphViz_ 
 
@@ -110,4 +114,4 @@ This allows for flexibility in ordering definitions. However, all vertices must 
 
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)

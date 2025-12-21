@@ -1,3 +1,8 @@
+---
+layout: default
+title: Walkers and Traversers
+---
+
 # Walkers and Traversers: Use Cases
 
 The library provides two types of graph state machine: `Traverser` and `Walker`. 
@@ -69,4 +74,4 @@ requiring transition guards to break out of cycles when needed.
 
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)

@@ -1,0 +1,42 @@
+title: GraphStateMachines
+description: A Kotlin library for creating state machines using directed graphs
+url: https://mdjkenna.github.io
+baseurl: /GraphStateMachines
+remote_theme: "jeffreytse/jekyll-theme-yat"
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-paginate
+  - jekyll-spaceship
+
+yat:
+  night_mode: "on"
+
+markdown: kramdown
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+include:
+  - docs
+
+exclude:
+  - src
+  - gradle
+  - build
+  - "*.gradle.kts"
+  - "*.properties"
+  - gradlew
+  - gradlew.bat
+  - "*.jar"
+  - "*.asc"
+  - LICENSE
+  - "*.txt"
+  - MAVEN_*.md
+  - TEST_*.md
+  - gsm_summary.md
+  - Gemfile
+  - Gemfile.lock

@@ -1,3 +1,8 @@
+---
+layout: default
+title: Transition Guards
+---
+
 # Transition Guards and Guard State
 
 Transition guards can block transitions across edges based on custom runtime conditions which are defined in the state machine builder. 
@@ -70,4 +75,4 @@ This shared state can be used to:
 
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)
