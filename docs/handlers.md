@@ -1,3 +1,8 @@
+---
+layout: default
+title: Handlers
+---
+
 # Handling Before Incoming and Outgoing Transitions
 
 GraphStateMachine provides `BeforeVisitHandler` and `OutgoingTransitionHandler` to execute custom logic at specific points during state transitions.
@@ -66,4 +71,4 @@ They integrate seamlessly with the state machine's single-threaded actor model, 
 
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)

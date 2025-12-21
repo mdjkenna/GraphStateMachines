@@ -1,3 +1,8 @@
+---
+layout: default
+title: Using Cycles
+---
+
 # Using Cycles
 
 The graph can contain any number of cycles and these are supported.
@@ -49,4 +54,4 @@ The transition guard allows the cycle to be taken up to 3 times before blocking 
 
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)

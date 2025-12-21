@@ -1,3 +1,8 @@
+---
+layout: default
+title: Visualization
+---
+
 # Visualising State Machines
 
 The `DotGenerator` class can generate DOT language representations of the graph state machines. 
@@ -46,4 +51,4 @@ This visualization helps in understanding, documenting, communicating and debugg
 
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)

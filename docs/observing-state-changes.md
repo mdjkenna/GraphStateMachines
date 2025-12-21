@@ -1,3 +1,8 @@
+---
+layout: default
+title: Observing State Changes
+---
+
 # Observing State Changes
 
 For both walkers and traversers, the current state is published through a `StateFlow`. A `StateFlow` is part of the standard Kotlin coroutines API. 
@@ -17,4 +22,4 @@ scope.launch {
 
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)

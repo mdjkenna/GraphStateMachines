@@ -1,3 +1,8 @@
+---
+layout: default
+title: Intermediate States
+---
+
 # Intermediate States
 
 Intermediate states are "in-between" states that are not published or observed. 
@@ -62,4 +67,4 @@ Intermediate states solve common problems in a more traditional state machine or
 
 ---
 
-[← Navigate Back](./index.md)
+[← Navigate Back](../index.md)
