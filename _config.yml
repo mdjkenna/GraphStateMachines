@@ -6,10 +6,16 @@ remote_theme: "jeffreytse/jekyll-theme-yat"
 
 plugins:
   - jekyll-remote-theme
+  - jekyll-feed
   - jekyll-seo-tag
   - jekyll-sitemap
   - jekyll-paginate
   - jekyll-spaceship
+  - jekyll-relative-links
+
+relative_links:
+  enabled: true
+  collections: true
 
 yat:
   night_mode: "on"
