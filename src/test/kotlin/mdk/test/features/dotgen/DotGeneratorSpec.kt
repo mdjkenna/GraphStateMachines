@@ -10,14 +10,14 @@ import mdk.gsm.dot.decorations.EdgeDecoration
 import mdk.gsm.dot.decorations.TransitionGuardDecoration
 import mdk.gsm.dot.decorations.VertexDecoration
 import mdk.gsm.graph.IVertex
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 
 class DotGeneratorSpec : BehaviorSpec({
 
     Given("A small directed graph for DOT generation") {
         data class StringVertex(override val id: String) : IVertex<String>
 
-        class SimpleGuardState : ITransitionGuardState {
+        class SimpleGuardState : MachineContext {
             override fun onReset() {}
         }
 

@@ -10,7 +10,7 @@ Both `Traversers` and `Walkers` use an actor model, processing actions sequentia
 ## Single-Threaded Execution
 
 The graph state machine operates on a coroutine scope with a single-threaded dispatcher.
-All user-defined handlers (transition guards, onBeforeVisit handlers) are suspend functions which are invoked on this same thread, providing several benefits.
+All user-defined handlers (transition hooks, onBeforeEntry handlers) are suspend functions which are invoked on this same thread, providing several benefits.
 
 A coroutine scope is generated as a default parameter when building a `Traverser` or `Walker`, but a user provided one can be included.
 

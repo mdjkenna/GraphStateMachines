@@ -1,4 +1,4 @@
-package mdk.gsm.state
+    package mdk.gsm.state
 
 import mdk.gsm.builder.GsmBuilderScope
 import mdk.gsm.graph.IVertex
@@ -10,13 +10,13 @@ import mdk.gsm.graph.IVertex
  *
  * @param V The type of vertices in the graph. Must implement [mdk.gsm.graph.IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state. Must implement [MachineContext].
  * @param A The type of arguments that can be passed with actions.
  *
- * @see OutgoingTransitionHandler
+ * @see BeforeExitHook
  */
 @GsmBuilderScope
-class OutgoingTransitionScope<V, I, G, A>(
+class BeforeExitScope<V, I, G, A>(
     val args: A?,
     val guardState: G?,
     val vertex: V
@@ -31,7 +31,7 @@ class OutgoingTransitionScope<V, I, G, A>(
      * When called, the state machine will skip exploring any outgoing edges
      * and remain in the current state.
      *
-     * @see OutgoingTransitionHandler
+     * @see BeforeExitHook
      */
     fun noTransition() {
         noChange = true
@@ -42,15 +42,15 @@ class OutgoingTransitionScope<V, I, G, A>(
  * This handler can be associated with a specific vertex during graph construction.
  * It is a function that executes custom logic before any outgoing transitions are explored.
  * The handler is invoked when the state machine is about to consider transitions from the current vertex.
- * It receives an [OutgoingTransitionScope] as its receiver, providing access to the current vertex,
+ * It receives an [BeforeExitScope] as its receiver, providing access to the current vertex,
  * the shared transition guard state, and any arguments passed with the current action.
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state. Must implement [MachineContext].
  * @param A The type of arguments that can be passed with actions.
  *
- * @see OutgoingTransitionScope
- * @see mdk.gsm.builder.VertexBuilderScope.onOutgoingTransition
+ * @see BeforeExitScope
+ * @see mdk.gsm.builder.VertexBuilderScope.onBeforeExit
  */
-typealias OutgoingTransitionHandler<V, I, G, A> = suspend OutgoingTransitionScope<V, I, G, A>.() -> Unit
+typealias BeforeExitHook<V, I, G, A> = suspend BeforeExitScope<V, I, G, A>.() -> Unit

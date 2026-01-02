@@ -9,7 +9,7 @@ import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.OutgoingTransitionTestGuardState
 
 class OutgoingTransitionHandlerSpec : BehaviorSpec({
-    given("A graph with vertices that use onOutgoingTransition handlers") {
+    given("A graph with vertices that use onBeforeExit handlers") {
         val ids = object {
             val START = "start"
             val MIDDLE = "middle"
@@ -26,8 +26,8 @@ class OutgoingTransitionHandlerSpec : BehaviorSpec({
 
         publishedStates.add(walker.current.value.vertex.id)
 
-        `when`("A NEXT action is received and the current vertex has an onOutgoingTransition handler that prevents traversal") {
-            // The START vertex has an onOutgoingTransition handler that prevents traversal when a condition is met
+        `when`("A NEXT action is received and the current vertex has an onBeforeExit handler that prevents traversal") {
+            // The START vertex has an onBeforeExit handler that prevents traversal when a condition is met
             guardState.shouldPreventTransition = true
 
             val result = walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
@@ -40,7 +40,7 @@ class OutgoingTransitionHandlerSpec : BehaviorSpec({
             }
         }
 
-        `when`("A NEXT action is received and the current vertex has an onOutgoingTransition handler that allows traversal") {
+        `when`("A NEXT action is received and the current vertex has an onBeforeExit handler that allows traversal") {
             // Now allow the traversal
             guardState.shouldPreventTransition = false
 
@@ -54,8 +54,8 @@ class OutgoingTransitionHandlerSpec : BehaviorSpec({
             }
         }
 
-        `when`("Another NEXT action is received and the current vertex has no onOutgoingTransition handler") {
-            // The MIDDLE vertex has no onOutgoingTransition handler, so traversal should always occur
+        `when`("Another NEXT action is received and the current vertex has no onBeforeExit handler") {
+            // The MIDDLE vertex has no onBeforeExit handler, so traversal should always occur
             val result = walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
             publishedStates.add(result.vertex.id)
 

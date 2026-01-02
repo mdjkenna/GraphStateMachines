@@ -16,7 +16,7 @@ sealed class GraphStateMachineAction<out A> {
     /**
      * Action to move to the next vertex in the graph with additional arguments of type [A].
      *
-     * The argument [A] is made available to any [TransitionGuard] functions.
+     * The argument [A] is made available to any [TransitionHook] functions.
      * The argument forms part of the published state since it is stored in the resulting [TransitionState]
      * and accessible via [TransitionState.args]. For example, you might supply an identifier used to load
      * an entity from a database.
@@ -42,10 +42,10 @@ sealed class GraphStateMachineAction<out A> {
 
     /**
      * Action to reset the state machine to its initial state, clearing all transition history.
-     * Note this causes: [ITransitionGuardState.onReset] to be called.
+     * Note this causes: [MachineContext.onReset] to be called.
      *
      * This can allow the same state machine instance to be reused, as long as custom mutations performed by the implementers code are completely re-initialised in the
-     * [ITransitionGuardState.onReset] implementation.
+     * [MachineContext.onReset] implementation.
      */
     data object Reset : GraphStateMachineAction<Nothing>()
 }

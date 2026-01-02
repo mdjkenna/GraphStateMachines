@@ -1,63 +1,68 @@
 ---
 layout: default
-title: Transition Guards
+title: Transition Hooks
 ---
 
-# Transition Guards and Guard State
+# Transition Hooks and Machine Context
 
-Transition guards can block transitions across edges based on custom runtime conditions which are defined in the state machine builder. 
-Transition guards are used to dynamically constrain state transitions to a subset of those defined in the graph.
-Transition guards are defined in edge builders and apply to that specific edge.
+Transition hooks can block transitions across edges based on custom runtime conditions which are defined in the state machine builder. 
+Transition hooks are used to dynamically constrain state transitions to a subset of those defined in the graph.
+Transition hooks are defined in edge builders and apply to that specific edge.
 
 ```kotlin
 addEdge {
     setTo(exampleVertex)
-    setEdgeTransitionGuard {
-        !guardState.isExampleTransitionBlocked 
+    onBeforeTransition {
+        if (guardState.isExampleTransitionBlocked) blockTransition()
     }
 }
 ```
 
-Returning `false` in the transition guard function blocks exploration across its edge.
-Transition guard functions have a `TransitionGuardScope` receiver, which provides data to the implementer,
+Calling `blockTransition()` within the transition hook function blocks exploration across its edge.
+If `blockTransition()` is not called, the transition is allowed by default.
+Transition hook functions have a `TransitionHookScope` receiver, which provides data to the implementer,
 such as `guardState` shown above. 
 
-Transition guards can also access arguments passed with actions:
+Transition hooks can also access arguments passed with actions:
 
 ```kotlin
-setEdgeTransitionGuard {
-    args != null && args.targetId == "details-screen"
+onBeforeTransition {
+    if (args == null || args.targetId != "details-screen") blockTransition()
 }
 ```
 
-In the above example, the transition guard only allows traversal if the action arguments specify a particular target ID.
-As suspend functions, transition guards can also invoke other suspend functions which might be needed to keep the current thread from being blocked, for example:
+In the above example, the transition hook blocks traversal unless the action arguments specify a particular target ID.
+As suspend functions, transition hooks can also invoke other suspend functions which might be needed to keep the current thread from being blocked, for example:
 
 ```kotlin
-setEdgeTransitionGuard {
+onBeforeTransition {
     val isAllowed = checkPermissions()
-    isAllowed
+    if (!isAllowed) blockTransition()
 }
 ```
 
-## Guard State
+## Machine Context
 
-The guard state is a user-defined implementation of the `ITransitionGuardState` interface.
+The machine context is a user-defined implementation of the `MachineContext` interface.
 There is a single instance per graph, which can be passed as a parameter into one of the builder functions.
-It can also be omitted, in which case no `ITransitionGuardState` implementation is needed.
+It can also be omitted, in which case no `MachineContext` implementation is needed.
 
 ```kotlin
 class GuardState(
     var isSomeTransitionBlocked: Boolean = false
-) : ITransitionGuardState
+) : MachineContext {
+    override fun onReset() {
+        isSomeTransitionBlocked = false
+    }
+}
 
 val traverser = buildGuardedTraverser(GuardState()) {
     buildGraph(startVertex) {
         addVertex(startVertex) {
             addEdge {
                 setTo(nextVertex)
-                setEdgeTransitionGuard {
-                    !guardState.isSomeTransitionBlocked
+                onBeforeTransition {
+                    if (guardState.isSomeTransitionBlocked) blockTransition()
                 }
             }
         }
@@ -65,8 +70,8 @@ val traverser = buildGuardedTraverser(GuardState()) {
 }
 ```
 
-The guard state is passed to the builder function and made available to all transition guards.
-The `ITransitionGuardState` instance is made available to `TransitionGuardScope` functions via their `TransitionGuardScope` receiver.
+The machine context is passed to the builder function and made available to all transition hooks.
+The `MachineContext` instance is made available to `TransitionHookScope` functions via their `TransitionHookScope` receiver.
 
 This shared state can be used to:
 - Store information that affects multiple transitions

@@ -4,7 +4,7 @@ import io.kotest.core.spec.style.BehaviorSpec
 import mdk.gsm.builder.buildGuardedTraverser
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 import mdk.gsm.util.StringVertex
 import mdk.test.utils.AssertionUtils
 
@@ -12,7 +12,7 @@ class SelfReferentialSpec : BehaviorSpec({
 
     Given("A graph with a self-referential vertex limited to 7 cycles by guard state") {
         var cycleCount = 0
-        val transitionGuardState = object : ITransitionGuardState {
+        val transitionGuardState = object : MachineContext {
             override fun onReset() { cycleCount = 0 }
         }
 
@@ -25,12 +25,11 @@ class SelfReferentialSpec : BehaviorSpec({
                 v(v1) {
                     e {
                         setTo(v1)
-                        setEdgeTransitionGuard {
+                        onBeforeTransition {
                             if (cycleCount < 7) {
                                 cycleCount++
-                                true
                             } else {
-                                false
+                                blockTransition()
                             }
                         }
                     }

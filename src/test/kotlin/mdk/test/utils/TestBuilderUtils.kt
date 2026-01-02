@@ -51,15 +51,15 @@ object TestBuilderUtils {
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo2 != true
+                        onBeforeTransition {
+                            if (guardState?.blockedGoingTo2 == true) blockTransition()
                         }
                     }
 
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo3 != true
+                        onBeforeTransition {
+                            if (guardState?.blockedGoingTo3 == true) blockTransition()
                         }
                     }
                 }
@@ -73,8 +73,8 @@ object TestBuilderUtils {
                 addVertex(v3) {
                     addEdge {
                         setTo(v5)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo5 != true
+                        onBeforeTransition {
+                            if (guardState?.blockedGoingTo5 == true) blockTransition()
                         }
                     }
 
@@ -92,9 +92,8 @@ object TestBuilderUtils {
                 addVertex(v5) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo7 != true && (from as SubTestVertex).testField // cast for subclass access
-                                    && v5.testField // alternatively capturing lambda, these are the two options
+                        onBeforeTransition {
+                            if (guardState?.blockedGoingTo7 == true || !(from as SubTestVertex).testField || !v5.testField) blockTransition()
                         }
                     }
                 }
@@ -102,8 +101,8 @@ object TestBuilderUtils {
                 addVertex(v6) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo7 != true
+                        onBeforeTransition {
+                            if (guardState?.blockedGoingTo7 == true) blockTransition()
                         }
                     }
                 }
@@ -116,8 +115,8 @@ object TestBuilderUtils {
                     if (add7to3cycle) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard {
-                                guardState?.blockedGoingTo3 != true
+                            onBeforeTransition {
+                                if (guardState?.blockedGoingTo3 == true) blockTransition()
                             }
                         }
                     }
@@ -137,15 +136,15 @@ object TestBuilderUtils {
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo2 != true
+                        onBeforeTransition {
+                            if (guardState?.blockedGoingTo2 == true) blockTransition()
                         }
                     }
 
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo3 != true
+                        onBeforeTransition {
+                            if (guardState?.blockedGoingTo3 == true) blockTransition()
                         }
                     }
                 }
@@ -159,8 +158,8 @@ object TestBuilderUtils {
                 addVertex(v3) {
                     addEdge {
                         setTo(v5)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo5 != true
+                        onBeforeTransition {
+                            if (guardState?.blockedGoingTo5 == true) blockTransition()
                         }
                     }
 
@@ -178,9 +177,8 @@ object TestBuilderUtils {
                 addVertex(v5) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo7 != true && (from as SubTestVertex).testField // cast for subclass access
-                                    && v5.testField // alternatively capturing lambda, these are the two options
+                        onBeforeTransition {
+                            if (guardState?.blockedGoingTo7 == true || !(from as SubTestVertex).testField || !v5.testField) blockTransition()
                         }
                     }
                 }
@@ -188,8 +186,8 @@ object TestBuilderUtils {
                 addVertex(v6) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo7 != true
+                        onBeforeTransition {
+                            if (guardState?.blockedGoingTo7 == true) blockTransition()
                         }
                     }
                 }
@@ -202,8 +200,8 @@ object TestBuilderUtils {
                     if (add7to3cycle) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard {
-                                guardState?.blockedGoingTo3 != true
+                            onBeforeTransition {
+                                if (guardState?.blockedGoingTo3 == true) blockTransition()
                             }
                         }
                     }
@@ -242,8 +240,8 @@ object TestBuilderUtils {
                 addVertex(v3) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedFrom3To2 != true
+                        onBeforeTransition {
+                            if (guardState?.blockedFrom3To2 == true) blockTransition()
                         }
                     }
 
@@ -286,8 +284,8 @@ object TestBuilderUtils {
                 addVertex(v8) {
                     addEdge {
                         setTo(v9)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedFrom8To9 != true
+                        onBeforeTransition {
+                            if (guardState?.blockedFrom8To9 == true) blockTransition()
                         }
                     }
                     addEdge {
@@ -370,7 +368,7 @@ object TestBuilderUtils {
                 }
 
                 addVertex(intermediate1) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
 
                         autoAdvance()
@@ -382,7 +380,7 @@ object TestBuilderUtils {
                 }
 
                 addVertex(regular1) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
 
@@ -392,7 +390,7 @@ object TestBuilderUtils {
                 }
 
                 addVertex(intermediate2) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -403,7 +401,7 @@ object TestBuilderUtils {
                 }
 
                 addVertex(regular2) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
 
@@ -413,7 +411,7 @@ object TestBuilderUtils {
                 }
 
                 addVertex(end) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -446,7 +444,7 @@ object TestBuilderUtils {
 
                 // This state conditionally auto-advances
                 addVertex(conditional) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         if (shouldAutoAdvanceProvider()) {
                             autoAdvance() // Skip this state based on condition
@@ -459,7 +457,7 @@ object TestBuilderUtils {
                 }
 
                 addVertex(end) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
                 }
@@ -491,7 +489,7 @@ object TestBuilderUtils {
 
                 // Chain of intermediate states
                 addVertex(intermediate1) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -502,7 +500,7 @@ object TestBuilderUtils {
                 }
 
                 addVertex(intermediate2) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -513,7 +511,7 @@ object TestBuilderUtils {
                 }
 
                 addVertex(intermediate3) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -524,7 +522,7 @@ object TestBuilderUtils {
                 }
 
                 addVertex(end) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
                 }

@@ -61,11 +61,11 @@ internal class TransitionMediator<V, I, G, A>(
                 break
             }
 
-            if (container.outgoingTransitionHandler != null) {
-                val outgoingTransitionScope = OutgoingTransitionScope(args, transitionGuardState, container.vertex)
-                container.outgoingTransitionHandler(outgoingTransitionScope)
+            if (container.beforeExitHook != null) {
+                val beforeExitScope = BeforeExitScope(args, transitionGuardState, container.vertex)
+                container.beforeExitHook(beforeExitScope)
 
-                if (outgoingTransitionScope.noChange) {
+                if (beforeExitScope.noChange) {
                     return@returnTransitionState TransitionState(
                         vertex = forwardTransition.currentStep(),
                         transitionBounds = currentBounds,
@@ -91,10 +91,10 @@ internal class TransitionMediator<V, I, G, A>(
 
             val nextVertex = traversalNode.vertex
             val handler = forwardTransition.getVertexContainer(nextVertex.id)
-                ?.beforeVisitHandler
+                ?.beforeEntryHook
 
             if (handler != null) {
-                val scope = BeforeVisitScope(
+                val scope = BeforeEntryScope(
                     vertex = nextVertex,
                     guardState = transitionGuardState,
                     args = args
@@ -144,7 +144,7 @@ internal class TransitionMediator<V, I, G, A>(
     }
 
     fun handleReset() : TransitionState<V, I, A> {
-        (transitionGuardState as? ITransitionGuardState)?.onReset()
+        (transitionGuardState as? MachineContext)?.onReset()
         return TransitionState(
             vertex = resettable.reset(),
             transitionBounds = TransitionBounds.WithinBounds,

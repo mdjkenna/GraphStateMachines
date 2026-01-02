@@ -18,7 +18,7 @@ internal annotation class GsmBuilderScope
  *
  * Example:
  * ```kotlin
- * val graph = buildGraphOnly<MyVertex, String, Flags, Nothing> {
+ * val graph = buildGraph<MyVertex, String, Flags, Nothing> {
  *     addVertex(MyVertex.Start) {
  *         addEdge { setTo(MyVertex.Step1) }
  *     }
@@ -37,7 +37,7 @@ internal annotation class GsmBuilderScope
  * @return A fully constructed [Graph].
  */
 @GsmBuilderScope
-fun <V, I, G, A> buildGraphOnly(
+fun <V, I, G, A> buildGraph(
     scopeConsumer : GraphBuilderScope<V, I, G, A>.() -> Unit
 ) : Graph<V, I, G, A> where V : IVertex<I> {
     val graphBuilder = GraphBuilder<V, I, G, A>()
@@ -59,7 +59,7 @@ fun <V, I, G, A> buildGraphOnly(
  * @param scopeConsumer DSL for declaring vertices and edges within the graph being built.
  * @return A fully constructed [Graph].
  */
-fun <V, I> buildPlainGraphOnly(
+fun <V, I> buildPlainGraph(
     scopeConsumer : GraphBuilderScope<V, I, Nothing, Nothing>.() -> Unit
 ) : Graph<V, I, Nothing, Nothing> where V : IVertex<I> {
     val graphBuilder = GraphBuilder<V, I, Nothing, Nothing>()
@@ -81,7 +81,7 @@ fun <V, I> buildPlainGraphOnly(
  *
  * Example:
  * ```kotlin
- * buildGraphOnly<MyVertex, String, Flags, Nothing> {
+ * buildGraph<MyVertex, String, Flags, Nothing> {
  *     addVertex(MyVertex.Start) {
  *         addEdge { setTo(MyVertex.Next) }
  *     }

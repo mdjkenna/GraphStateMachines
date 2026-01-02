@@ -1,8 +1,8 @@
 package mdk.test.utils
 
-import mdk.gsm.util.IStringVertex
+import mdk.gsm.graph.IVertex
 
-open class TestVertex(override val id: String) : IStringVertex {
+open class TestVertex(override val id: String) : IVertex<String> {
     override fun toString(): String {
         return id
     }

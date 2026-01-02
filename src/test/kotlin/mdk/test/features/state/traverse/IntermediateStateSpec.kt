@@ -4,12 +4,12 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 import mdk.test.utils.AssertionUtils.assertTracedPathWithCurrentState
 import mdk.test.utils.TestBuilderUtils
 
 
-class TestTransitionGuardState : ITransitionGuardState {
+class TestTransitionGuardState : MachineContext {
     override fun onReset() { /* No state to reset */ }
 }
 
@@ -58,7 +58,7 @@ class IntermediateStateSpec : BehaviorSpec({
 
             Then(
                 """
-                    'onBeforeVisit' has only been called on the vertices which have been visited by progressing forwards using NEXT action.
+                    'onBeforeEntry' has only been called on the vertices which have been visited by progressing forwards using NEXT action.
                     This means the start vertex should be excluded, as it was not arrived at by a NEXT action.
                     """.trimIndent()
             ) {
@@ -90,7 +90,7 @@ class IntermediateStateSpec : BehaviorSpec({
             }
 
             Then(
-                "'onBeforeVisit' has been called on all vertices that have been arrived at by a next action"
+                "'onBeforeEntry' has been called on all vertices that have been arrived at by a next action"
             ) {
                 beforeVisitCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1, ids.INTERMEDIATE_2, ids.REGULAR_2)
             }
@@ -123,7 +123,7 @@ class IntermediateStateSpec : BehaviorSpec({
                 )
             }
 
-            Then("'onBeforeVisit' hook has been invoked again on the forward traversal") {
+            Then("'onBeforeEntry' hook has been invoked again on the forward traversal") {
                 beforeVisitCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1, ids.INTERMEDIATE_2, ids.REGULAR_2, ids.INTERMEDIATE_2, ids.REGULAR_2)
             }
 

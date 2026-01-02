@@ -7,7 +7,7 @@ import mdk.gsm.builder.buildTraverserWithActions
 import mdk.gsm.builder.buildWalkerWithActions
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.scope.StateMachineScopeFactory
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 import mdk.gsm.state.traverser.Traverser
 import mdk.gsm.state.walker.Walker
 import mdk.gsm.util.LongVertex
@@ -114,11 +114,11 @@ object GraphScenarios {
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo2 }
+                        onBeforeTransition { if (guardState.blockedGoingTo2) blockTransition() }
                     }
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo3 }
+                        onBeforeTransition { if (guardState.blockedGoingTo3) blockTransition() }
                     }
                 }
 
@@ -129,7 +129,7 @@ object GraphScenarios {
                 addVertex(v3) {
                     addEdge {
                         setTo(v5)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo5 }
+                        onBeforeTransition { if (guardState.blockedGoingTo5) blockTransition() }
                     }
                     addEdge { setTo(v6) }
                 }
@@ -141,10 +141,8 @@ object GraphScenarios {
                 addVertex(v5) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            !guardState.blockedGoingTo7 && 
-                            (from as SubTestVertex).testField &&
-                            v5.testField
+                        onBeforeTransition {
+                            if (guardState.blockedGoingTo7 || !(from as SubTestVertex).testField || !v5.testField) blockTransition()
                         }
                     }
                 }
@@ -152,7 +150,7 @@ object GraphScenarios {
                 addVertex(v6) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo7 }
+                        onBeforeTransition { if (guardState.blockedGoingTo7) blockTransition() }
                     }
                 }
 
@@ -161,7 +159,7 @@ object GraphScenarios {
                     if (add7to3Cycle) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard { !guardState.blockedGoingTo3 }
+                            onBeforeTransition { if (guardState.blockedGoingTo3) blockTransition() }
                         }
                     }
                 }
@@ -192,11 +190,11 @@ object GraphScenarios {
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo2 }
+                        onBeforeTransition { if (guardState.blockedGoingTo2) blockTransition() }
                     }
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo3 }
+                        onBeforeTransition { if (guardState.blockedGoingTo3) blockTransition() }
                     }
                 }
 
@@ -207,7 +205,7 @@ object GraphScenarios {
                 addVertex(v3) {
                     addEdge {
                         setTo(v5)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo5 }
+                        onBeforeTransition { if (guardState.blockedGoingTo5) blockTransition() }
                     }
                     addEdge { setTo(v6) }
                 }
@@ -219,10 +217,8 @@ object GraphScenarios {
                 addVertex(v5) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            !guardState.blockedGoingTo7 && 
-                            (from as SubTestVertex).testField &&
-                            v5.testField
+                        onBeforeTransition {
+                            if (guardState.blockedGoingTo7 || !(from as SubTestVertex).testField || !v5.testField) blockTransition()
                         }
                     }
                 }
@@ -230,7 +226,7 @@ object GraphScenarios {
                 addVertex(v6) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo7 }
+                        onBeforeTransition { if (guardState.blockedGoingTo7) blockTransition() }
                     }
                 }
 
@@ -239,7 +235,7 @@ object GraphScenarios {
                     if (add7to3Cycle) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard { !guardState.blockedGoingTo3 }
+                            onBeforeTransition { if (guardState.blockedGoingTo3) blockTransition() }
                         }
                     }
                 }
@@ -290,7 +286,7 @@ object GraphScenarios {
                 addVertex(v3) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard { !guardState.blockedFrom3To2 }
+                        onBeforeTransition { if (guardState.blockedFrom3To2) blockTransition() }
                     }
                     addEdge { setTo(v7) }
                     addEdge { setTo(v5) }
@@ -316,7 +312,7 @@ object GraphScenarios {
                 addVertex(v8) {
                     addEdge {
                         setTo(v9)
-                        setEdgeTransitionGuard { !guardState.blockedFrom8To9 }
+                        onBeforeTransition { if (guardState.blockedFrom8To9) blockTransition() }
                     }
                     addEdge { setTo(v10) }
                 }
@@ -387,7 +383,7 @@ object GraphScenarios {
                 addVertex(v3) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard { !guardState.blockedFrom3To2 }
+                        onBeforeTransition { if (guardState.blockedFrom3To2) blockTransition() }
                     }
                     addEdge { setTo(v7) }
                     addEdge { setTo(v5) }
@@ -402,7 +398,7 @@ object GraphScenarios {
                 addVertex(v8) {
                     addEdge {
                         setTo(v9)
-                        setEdgeTransitionGuard { !guardState.blockedFrom8To9 }
+                        onBeforeTransition { if (guardState.blockedFrom8To9) blockTransition() }
                     }
                     addEdge { setTo(v10) }
                 }
@@ -425,7 +421,7 @@ object GraphScenarios {
     
     /**
      * Creates a graph with intermediate states that auto-advance.
-     * Tests onBeforeVisit handlers and automatic state transitions.
+     * Tests onBeforeEntry handlers and automatic state transitions.
      * 
      * Topology: start -> intermediate1 (auto) -> regular1 -> intermediate2 (auto) -> regular2 -> end (auto)
      */
@@ -448,7 +444,7 @@ object GraphScenarios {
                 }
 
                 addVertex(intermediate1) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -456,14 +452,14 @@ object GraphScenarios {
                 }
 
                 addVertex(regular1) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
                     addEdge { setTo(intermediate2) }
                 }
 
                 addVertex(intermediate2) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -471,14 +467,14 @@ object GraphScenarios {
                 }
 
                 addVertex(regular2) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
                     addEdge { setTo(end) }
                 }
 
                 addVertex(end) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -509,7 +505,7 @@ object GraphScenarios {
                 }
 
                 addVertex(conditional) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         if (shouldAutoAdvanceProvider()) {
                             autoAdvance()
@@ -519,7 +515,7 @@ object GraphScenarios {
                 }
 
                 addVertex(end) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
                 }
@@ -550,7 +546,7 @@ object GraphScenarios {
                 }
 
                 addVertex(intermediate1) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -558,7 +554,7 @@ object GraphScenarios {
                 }
 
                 addVertex(intermediate2) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -566,7 +562,7 @@ object GraphScenarios {
                 }
 
                 addVertex(intermediate3) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -574,7 +570,7 @@ object GraphScenarios {
                 }
 
                 addVertex(end) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
                 }
@@ -600,7 +596,7 @@ object GraphScenarios {
                         addVertex(vertex) {
                             addEdge {
                                 setTo(vertices[index + 1])
-                                setEdgeTransitionGuard { argMatcher(args) }
+                                onBeforeTransition { if (!argMatcher(args)) blockTransition() }
                             }
                         }
                     } else {
@@ -628,7 +624,7 @@ object GraphScenarios {
                         addVertex(vertex) {
                             addEdge {
                                 setTo(vertices[index + 1])
-                                setEdgeTransitionGuard { argMatcher(args) }
+                                onBeforeTransition { if (!argMatcher(args)) blockTransition() }
                             }
                         }
                     } else {
@@ -672,19 +668,19 @@ object GraphScenarios {
                 addVertex(v2) {
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard {
-                            args == argsGoTo3
+                        onBeforeTransition {
+                            if (args != argsGoTo3) blockTransition()
                         }
                     }
                     addEdge {
                         setTo(v4)
-                        setEdgeTransitionGuard {
-                            args == argsGoTo4
+                        onBeforeTransition {
+                            if (args != argsGoTo4) blockTransition()
                         }
                     }
                 }
                 addVertex(v4) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         if (args == argsGoTo4) {
                             autoAdvance()
                         }
@@ -726,19 +722,19 @@ object GraphScenarios {
                 addVertex(v2) {
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard {
-                            args == argsGoTo3
+                        onBeforeTransition {
+                            if (args != argsGoTo3) blockTransition()
                         }
                     }
                     addEdge {
                         setTo(v4)
-                        setEdgeTransitionGuard {
-                            args == argsGoTo4
+                        onBeforeTransition {
+                            if (args != argsGoTo4) blockTransition()
                         }
                     }
                 }
                 addVertex(v4) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         if (args == argsGoTo4) {
                             autoAdvance()
                         }
@@ -776,33 +772,33 @@ object GraphScenarios {
                     addEdge { setTo(intermediate1) }
                 }
                 addVertex(intermediate1) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCallback(vertex.id)
                         autoAdvance()
                     }
                     addEdge { setTo(regular1) }
                 }
                 addVertex(regular1) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCallback(vertex.id)
                     }
                     addEdge { setTo(intermediate2) }
                 }
                 addVertex(intermediate2) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCallback(vertex.id)
                         autoAdvance()
                     }
                     addEdge { setTo(regular2) }
                 }
                 addVertex(regular2) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCallback(vertex.id)
                     }
                     addEdge { setTo(end) }
                 }
                 addVertex(end) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCallback(vertex.id)
                         autoAdvance()
                     }
@@ -815,8 +811,8 @@ object GraphScenarios {
      * Creates a 2-vertex traverser for testing transition bounds with explicit step into bounds.
      */
     fun twoVertexBoundsTraverser(
-        guardState: ITransitionGuardState? = null
-    ): Traverser<LongVertex, Long, ITransitionGuardState?, Nothing> {
+        guardState: MachineContext? = null
+    ): Traverser<LongVertex, Long, MachineContext?, Nothing> {
         return buildGuardedTraverser(guardState) {
             val v1 = LongVertex(1L)
             val v2 = LongVertex(2L)
@@ -834,8 +830,8 @@ object GraphScenarios {
      * Creates a 2-vertex walker for testing traversal bounds with explicit step into bounds.
      */
     fun twoVertexBoundsWalker(
-        guardState: ITransitionGuardState? = null
-    ): Walker<LongVertex, Long, ITransitionGuardState?, Nothing> {
+        guardState: MachineContext? = null
+    ): Walker<LongVertex, Long, MachineContext?, Nothing> {
         return buildGuardedWalker(guardState) {
             val v1 = LongVertex(1L)
             val v2 = LongVertex(2L)
@@ -947,7 +943,7 @@ object GraphScenarios {
 
             buildGraph(start) {
                 addVertex(start) {
-                    onOutgoingTransition {
+                    onBeforeExit {
                         transitionAttemptCallback(vertex.id)
                         if (guardState.shouldPreventTransition) {
                             noTransition()

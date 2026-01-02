@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="226pt" height="633pt" viewBox="0.00 0.00 226.00 633.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 628.53)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-628.53 222.05,-628.53 222.05,4 -4,4"/>
+<!-- Idle -->
+<g id="node1" class="node">
+<title>Idle</title>
+<ellipse fill="#005faf" stroke="#005faf" stroke-width="2.2" cx="103.8" cy="-598.48" rx="26.05" ry="26.05"/>
+<text xml:space="preserve" text-anchor="middle" x="103.8" y="-594.28" font-family="Times,serif" font-size="14.00" fill="#ffffff">Idle</text>
+</g>
+<!-- Filling -->
+<g id="node3" class="node">
+<title>Filling</title>
+<ellipse fill="#005faf" stroke="#005faf" stroke-width="2.2" cx="71.8" cy="-499.63" rx="36.8" ry="36.8"/>
+<text xml:space="preserve" text-anchor="middle" x="71.8" y="-495.43" font-family="Times,serif" font-size="14.00" fill="#ffffff">Filling</text>
+</g>
+<!-- Idle&#45;&gt;Filling -->
+<g id="edge1" class="edge">
+<title>Idle-&gt;Filling</title>
+<path fill="none" stroke="#000000" stroke-width="1.6" d="M95.64,-572.79C92.87,-564.39 89.67,-554.72 86.54,-545.24"/>
+<polygon fill="#000000" stroke="#000000" stroke-width="1.6" points="89.25,-544.52 84.08,-537.8 83.94,-546.28 89.25,-544.52"/>
+</g>
+<!-- LoadRedistribution -->
+<g id="node2" class="node">
+<title>LoadRedistribution</title>
+<ellipse fill="#005faf" stroke="#005faf" stroke-width="2.2" cx="103.8" cy="-86.14" rx="86.14" ry="86.14"/>
+<text xml:space="preserve" text-anchor="middle" x="103.8" y="-81.94" font-family="Times,serif" font-size="14.00" fill="#ffffff">LoadRedistribution</text>
+</g>
+<!-- Spinning -->
+<g id="node5" class="node">
+<title>Spinning</title>
+<ellipse fill="#005faf" stroke="#005faf" stroke-width="2.2" cx="103.8" cy="-254.19" rx="45.92" ry="45.92"/>
+<text xml:space="preserve" text-anchor="middle" x="103.8" y="-249.99" font-family="Times,serif" font-size="14.00" fill="#ffffff">Spinning</text>
+</g>
+<!-- LoadRedistribution&#45;&gt;Spinning -->
+<g id="edge6" class="edge">
+<title>LoadRedistribution-&gt;Spinning</title>
+<path fill="none" stroke="#34c759" stroke-width="1.6" d="M110.55,-173.01C110.53,-181.36 110.41,-189.68 110.21,-197.62"/>
+<polygon fill="#34c759" stroke="#34c759" stroke-width="1.6" points="107.42,-197.31 109.97,-205.39 113.02,-197.49 107.42,-197.31"/>
+<text xml:space="preserve" text-anchor="middle" x="169.28" y="-195.05" font-family="Times,serif" font-size="14.00" fill="#34c759">When rebalanced</text>
+</g>
+<!-- Washing -->
+<g id="node4" class="node">
+<title>Washing</title>
+<ellipse fill="#005faf" stroke="#005faf" stroke-width="2.2" cx="67.8" cy="-381.47" rx="45.36" ry="45.36"/>
+<text xml:space="preserve" text-anchor="middle" x="67.8" y="-377.27" font-family="Times,serif" font-size="14.00" fill="#ffffff">Washing</text>
+</g>
+<!-- Filling&#45;&gt;Washing -->
+<g id="edge2" class="edge">
+<title>Filling-&gt;Washing</title>
+<path fill="none" stroke="#000000" stroke-width="1.6" d="M70.54,-461.88C70.27,-454.21 69.99,-445.97 69.71,-437.8"/>
+<polygon fill="#000000" stroke="#000000" stroke-width="1.6" points="72.51,-437.87 69.44,-429.97 66.91,-438.06 72.51,-437.87"/>
+</g>
+<!-- Washing&#45;&gt;Spinning -->
+<g id="edge3" class="edge">
+<title>Washing-&gt;Spinning</title>
+<path fill="none" stroke="#000000" stroke-width="1.6" d="M80.29,-337C82.86,-328.08 85.59,-318.58 88.24,-309.33"/>
+<polygon fill="#000000" stroke="#000000" stroke-width="1.6" points="90.9,-310.22 90.42,-301.76 85.52,-308.67 90.9,-310.22"/>
+</g>
+<!-- Spinning&#45;&gt;Idle -->
+<g id="edge4" class="edge">
+<title>Spinning-&gt;Idle</title>
+<path fill="none" stroke="#000000" stroke-width="1.6" d="M115.47,-299.41C118.09,-311.25 120.48,-324.09 121.8,-336.11 131.53,-424.62 129.43,-448.14 117.8,-536.43 116.68,-544.93 114.92,-554 113.02,-562.47"/>
+<polygon fill="#000000" stroke="#000000" stroke-width="1.6" points="110.34,-561.64 111.23,-570.07 115.79,-562.92 110.34,-561.64"/>
+</g>
+<!-- Spinning&#45;&gt;LoadRedistribution -->
+<g id="edge5" class="edge">
+<title>Spinning-&gt;LoadRedistribution</title>
+<path fill="none" stroke="#ff3b30" stroke-width="1.6" d="M97.71,-207.82C97.42,-200.1 97.23,-191.84 97.13,-183.38"/>
+<polygon fill="#ff3b30" stroke="#ff3b30" stroke-width="1.6" points="99.93,-183.41 97.07,-175.43 94.33,-183.45 99.93,-183.41"/>
+<text xml:space="preserve" text-anchor="middle" x="38.28" y="-195.33" font-family="Times,serif" font-size="14.00" fill="#ff3b30">If unbalanced</text>
+</g>
+</g>
+</svg>

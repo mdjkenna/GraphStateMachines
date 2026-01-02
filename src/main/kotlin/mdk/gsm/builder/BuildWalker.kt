@@ -11,7 +11,7 @@ import mdk.gsm.graph.IVertex
 import mdk.gsm.scope.StateMachineScopeFactory
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.GsmController
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 import mdk.gsm.state.TransitionBounds
 import mdk.gsm.state.walker.Walker
 import mdk.gsm.state.walker.WalkerDispatcherImplementation
@@ -54,7 +54,7 @@ import mdk.gsm.state.walker.WalkerStateImplementation
  *
  * @param V The type of vertices (states). Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of transition guard state. Must implement [MachineContext].
  * @param A The type of per-action arguments used with [GraphStateMachineAction.NextArgs].
  */
 fun <V, I, G, A> buildWalkerWithActions(
@@ -204,7 +204,7 @@ fun <V, I> buildWalker(
  *
  * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param G The traversal guard state shared across edges. Must implement [ITransitionGuardState].
+ * @param G The traversal guard state shared across edges. Must implement [MachineContext].
  * @param A The type of arguments that can be passed with actions to influence traversal decisions.
  *
  * @see buildWalker
@@ -220,12 +220,12 @@ class WalkerBuilderScope<V, I, G, A> @PublishedApi internal constructor(
     /**
      * Assigns an already-built [Graph] and sets the start vertex for the walker.
      *
-     * Use this when you have constructed a graph separately (e.g., via [buildGraphOnly]) and
+     * Use this when you have constructed a graph separately (e.g., via [buildGraph]) and
      * want to reuse it. The [startAtVertex] should exist in the provided [graph].
      *
      * Example:
      * ```kotlin
-     * val graph = buildGraphOnly<MyVertex, String, Flags, Nothing> { /* ... */ }
+     * val graph = buildGraph<MyVertex, String, Flags, Nothing> { /* ... */ }
      * setWorkflowGraph(startAtVertex = MyVertex.Start, graph = graph)
      * ```
      *

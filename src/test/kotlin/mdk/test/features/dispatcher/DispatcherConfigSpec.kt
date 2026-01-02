@@ -73,9 +73,8 @@ class DispatcherConfigSpec : BehaviorSpec({
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard {
+                        onBeforeTransition {
                             delay(100)
-                            true
                         }
                     }
                 }
@@ -124,9 +123,8 @@ class DispatcherConfigSpec : BehaviorSpec({
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard {
+                        onBeforeTransition {
                             delay(100)
-                            true
                         }
                     }
                 }

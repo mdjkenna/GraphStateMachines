@@ -21,7 +21,7 @@ import mdk.gsm.state.TransitionState
  *
  * @param V The type of vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param G The type of transition guard state, which controls conditional edge transitions. Must implement [mdk.gsm.state.ITransitionGuardState].
+ * @param G The type of transition guard state, which controls conditional edge transitions. Must implement [mdk.gsm.state.MachineContext].
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
  * @see WalkerDispatcher For dispatching actions to the walker

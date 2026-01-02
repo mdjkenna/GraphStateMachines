@@ -85,11 +85,11 @@ class WalkerDispatchMethodsSpec : BehaviorSpec({
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard { args == 100 }
+                        onBeforeTransition { if (args != 100) blockTransition() }
                     }
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard { args == 200 }
+                        onBeforeTransition { if (args != 200) blockTransition() }
                     }
                 }
                 addVertex(v2)

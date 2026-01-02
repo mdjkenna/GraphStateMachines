@@ -132,15 +132,15 @@ The standard `GraphStateMachineAction.Next` can still be used when arguments are
 
 Arguments are accessible via the `args` property in several contexts:
 
-- **Transition guards** (`TransitionGuardScope.args`)
-- **Before-visit handlers** (`BeforeVisitScope.args`)
+- **Transition hooks** (`TransitionHookScope.args`)
+- **Before-entry hooks** (`BeforeEntryScope.args`)
 - **Published state** (`TransitionState.args`)
 
 ```kotlin
 addVertex(vertexA) {
     addEdge {
         setTo(vertexB)
-        setEdgeTransitionGuard {
+        onBeforeTransition {
             args?.targetId == "target-b"
         }
     }

@@ -5,14 +5,14 @@ import io.kotest.matchers.shouldBe
 import mdk.gsm.builder.buildGuardedWalker
 import mdk.gsm.scope.StateMachineScopeFactory
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 import mdk.gsm.util.StringVertex
 
 class WalkerSelfReferentialSpec : BehaviorSpec({
 
     Given("A walker with a self-referential vertex limited to 7 cycles by guard state") {
         var cycleCount = 0
-        val transitionGuardState = object : ITransitionGuardState {
+        val transitionGuardState = object : MachineContext {
             override fun onReset() { cycleCount = 0 }
         }
 
@@ -24,12 +24,11 @@ class WalkerSelfReferentialSpec : BehaviorSpec({
                 addVertex(v1) {
                     addEdge {
                         setTo(v1)
-                        setEdgeTransitionGuard {
+                        onBeforeTransition {
                             if (cycleCount < 7) {
                                 cycleCount++
-                                true
                             } else {
-                                false
+                                blockTransition()
                             }
                         }
                     }

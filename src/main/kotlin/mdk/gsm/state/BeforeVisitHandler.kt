@@ -4,25 +4,25 @@ import mdk.gsm.builder.GsmBuilderScope
 import mdk.gsm.graph.IVertex
 
 /**
- * Provides context and control capabilities to vertex pre-visit handlers.
+ * Provides context and control capabilities to vertex pre-entry handlers.
  *
- * This scope is automatically created and passed to a [BeforeVisitHandler] function when the state machine
+ * This scope is automatically created and passed to a [BeforeEntryHook] function when the state machine
  * is about to transition to a vertex. It provides access to:
  *
  * @property vertex The vertex that is about to be visited (become the current state).
- * @property guardState The shared transition guard state for the entire state machine.
+ * @property guardState The shared machine context for the entire state machine.
  * @property args Any arguments passed with the current action. May be null if no arguments were provided.
  *
  * @param V The type of vertices in the graph. Must implement [mdk.gsm.graph.IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of machine context. Must implement [MachineContext].
  * @param A The type of arguments that can be passed with actions.
  *
- * @see BeforeVisitHandler
+ * @see BeforeEntryHook
  * @see mdk.gsm.graph.VertexContainer
  */
 @GsmBuilderScope
-class BeforeVisitScope<V, I, G, A>(
+class BeforeEntryScope<V, I, G, A>(
     val vertex: V,
     val guardState: G?,
     val args : A?
@@ -42,7 +42,7 @@ class BeforeVisitScope<V, I, G, A>(
      *
      * Note: Intermediate states are skipped over during previous actions.
      *
-     * @see BeforeVisitHandler
+     * @see BeforeEntryHook
      */
     fun autoAdvance() {
         autoAdvanceTrigger = true
@@ -50,19 +50,17 @@ class BeforeVisitScope<V, I, G, A>(
 }
 
 /**
- *
  * The handler is invoked when the state machine is about to transition to a new vertex, but before
- * that vertex is published as the current state. It receives a [BeforeVisitScope] as its receiver,
- * providing access to the vertex being visited, the shared transition guard state, and any arguments
+ * that vertex is published as the current state. It receives a [BeforeEntryScope] as its receiver,
+ * providing access to the vertex being visited, the shared machine context, and any arguments
  * passed with the current action.
- *
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of transition guard state. Must implement [ITransitionGuardState].
+ * @param G The type of machine context. Must implement [MachineContext].
  * @param A The type of arguments that can be passed with actions.
  *
- * @see BeforeVisitScope
- * @see mdk.gsm.builder.VertexBuilderScope.onBeforeVisit
+ * @see BeforeEntryScope
+ * @see mdk.gsm.builder.VertexBuilderScope.onBeforeEntry
  */
-typealias BeforeVisitHandler<V, I, G, A> = suspend BeforeVisitScope<V, I, G, A>.() -> Unit
+typealias BeforeEntryHook<V, I, G, A> = suspend BeforeEntryScope<V, I, G, A>.() -> Unit

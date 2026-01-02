@@ -28,13 +28,12 @@ class AtomicActionsSpec : BehaviorSpec(
                     addVertex(v1) {
                         addEdge {
                             setTo(v2)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
 
-                        onOutgoingTransition {
+                        onBeforeExit {
                             receivedActions.add(args ?: -1)
                         }
                     }
@@ -42,13 +41,12 @@ class AtomicActionsSpec : BehaviorSpec(
                     addVertex(v2) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
 
-                        onOutgoingTransition {
+                        onBeforeExit {
                             receivedActions.add(args ?: -1)
                         }
                     }
@@ -56,13 +54,12 @@ class AtomicActionsSpec : BehaviorSpec(
                     addVertex(v3) {
                         addEdge {
                             setTo(v5)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
 
-                        onOutgoingTransition {
+                        onBeforeExit {
                             receivedActions.add(args ?: -1)
                         }
                     }
@@ -104,27 +101,24 @@ class AtomicActionsSpec : BehaviorSpec(
                     addVertex(v1) {
                         addEdge {
                             setTo(v2)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
                     }
                     addVertex(v2) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
                     }
                     addVertex(v3) {
                         addEdge {
                             setTo(v5)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
                     }
@@ -170,19 +164,19 @@ class AtomicActionsSpec : BehaviorSpec(
                     addVertex(v1) {
                         addEdge {
                             setTo(v2)
-                            setEdgeTransitionGuard { true }
+                            onBeforeTransition { }
                         }
                     }
                     addVertex(v2) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard { true }
+                            onBeforeTransition { }
                         }
                     }
                     addVertex(v3) {
                         addEdge {
                             setTo(v5)
-                            setEdgeTransitionGuard { true }
+                            onBeforeTransition { }
                         }
                     }
                     addVertex(v5)

@@ -5,7 +5,7 @@ import io.kotest.datatest.withData
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 import mdk.gsm.state.traverser.Traverser
 import mdk.test.utils.AssertionUtils
 import mdk.test.utils.AssertionUtils.assertTracedPathWithCurrentState
@@ -235,7 +235,7 @@ class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
     companion object {
         data class TestParameters(
             val title: String,
-            val traverser: Traverser<out IVertex<String>, String, out ITransitionGuardState, Nothing>,
+            val traverser: Traverser<out IVertex<String>, String, out MachineContext, Nothing>,
             val expectedForwardPath: List<String>
         )
 

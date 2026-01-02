@@ -5,8 +5,8 @@ package mdk.gsm.builder
 import mdk.gsm.graph.Edge
 import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.VertexContainer
-import mdk.gsm.state.BeforeVisitHandler
-import mdk.gsm.state.OutgoingTransitionHandler
+import mdk.gsm.state.BeforeEntryHook
+import mdk.gsm.state.BeforeExitHook
 
 @GsmBuilderScope
 /**
@@ -26,7 +26,7 @@ class VertexBuilderScope<V, I, G, A> internal constructor(
      *
      * Destination:
      * - Set the target via [EdgeBuilderScope.setTo] using an `id` or a vertex instance.
-     * - Optionally set a transition guard with [EdgeBuilderScope.setEdgeTransitionGuard].
+     * - Optionally set a transition guard with [EdgeBuilderScope.onBeforeTransition].
      *
      * Example:
      * ```kotlin
@@ -70,7 +70,7 @@ class VertexBuilderScope<V, I, G, A> internal constructor(
     ) = addEdge(autoOrder, edgeBuilderScope)
 
     /**
-     * Sets a [BeforeVisitHandler] that runs just before this vertex is published as the current state.
+     * Sets a [BeforeEntryHook] that runs just before this vertex is published as the current state.
      *
      * Typical uses:
      * - Perform setup work before observers see this state
@@ -78,39 +78,39 @@ class VertexBuilderScope<V, I, G, A> internal constructor(
      *
      * Example:
      * ```kotlin
-     * onBeforeVisit {
+     * onBeforeEntry {
      *     // perform setup
      *     // optionally skip publishing this vertex
      *     // autoAdvance()
      * }
      * ```
      *
-     * @see BeforeVisitHandler
-     * @see mdk.gsm.state.BeforeVisitScope
+     * @see BeforeEntryHook
+     * @see mdk.gsm.state.BeforeEntryScope
      */
-    fun onBeforeVisit(handler: BeforeVisitHandler<V, I, G, A>) {
-        vertexContainerBuilder.beforeVisitHandler = handler
+    fun onBeforeEntry(handler: BeforeEntryHook<V, I, G, A>) {
+        vertexContainerBuilder.beforeEntryHook = handler
     }
 
     /**
-     * Sets an [OutgoingTransitionHandler] that runs before any outgoing transitions are explored.
+     * Sets an [BeforeExitHook] that runs before any outgoing transitions are explored.
      *
      * Use this to prevent transitions entirely by calling `noTransition()`, keeping the state machine at
      * the current vertex.
      *
      * Example:
      * ```kotlin
-     * onOutgoingTransition {
+     * onBeforeExit {
      *     val allowed = /* validate */ true
      *     if (!allowed) noTransition()
      * }
      * ```
      *
-     * @see OutgoingTransitionHandler
-     * @see mdk.gsm.state.OutgoingTransitionScope
+     * @see BeforeExitHook
+     * @see mdk.gsm.state.BeforeExitScope
      */
-    fun onOutgoingTransition(handler: OutgoingTransitionHandler<V, I, G, A>) {
-        vertexContainerBuilder.outgoingTransitionHandler = handler
+    fun onBeforeExit(handler: BeforeExitHook<V, I, G, A>) {
+        vertexContainerBuilder.beforeExitHook = handler
     }
 }
 
@@ -119,8 +119,8 @@ internal class VertexBuilder<V, I, G, A>(
 ) where V : IVertex<I> {
 
     private val adjacent = HashMap<I, Edge<V, I, G, A>>()
-    var beforeVisitHandler: BeforeVisitHandler<V, I, G, A>? = null
-    var outgoingTransitionHandler: OutgoingTransitionHandler<V, I, G, A>? = null
+    var beforeEntryHook: BeforeEntryHook<V, I, G, A>? = null
+    var beforeExitHook: BeforeExitHook<V, I, G, A>? = null
 
     val numberOfEdges: Int
         get() = adjacent.size
@@ -137,8 +137,8 @@ internal class VertexBuilder<V, I, G, A>(
         return VertexContainer(
             vertex = stepInstance,
             adjacentOrdered = sortedEdges,
-            beforeVisitHandler = beforeVisitHandler,
-            outgoingTransitionHandler = outgoingTransitionHandler
+            beforeEntryHook = beforeEntryHook,
+            beforeExitHook = beforeExitHook
         )
     }
 }

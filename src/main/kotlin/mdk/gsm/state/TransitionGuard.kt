@@ -4,41 +4,44 @@ import mdk.gsm.builder.GsmBuilderScope
 import mdk.gsm.graph.IVertex
 
 /**
- * A conditional function that controls whether a traversal along an edge is permitted during graph traversal.
+ * A hook function that controls whether a traversal along an edge is permitted during graph traversal.
  *
- * A [TransitionGuard] function is associated with an [mdk.gsm.graph.Edge] and is evaluated when the state machine
+ * A [TransitionHook] function is associated with an [mdk.gsm.graph.Edge] and is evaluated when the state machine
  * attempts to traverse that edge.
  *
  * It acts as a dynamic runtime condition that can prevent certain transitions
  * based on the current state of the system, effectively implementing conditional navigation logic.
  *
- * As a lambda with receiver the functions implementation occurs within a [TransitionGuardScope],
- * which can be used to make decisions about traversal.
- *
- * @return `true` to allow the traversal along this edge, `false` to prevent it and try the next edge
+ * As a lambda with receiver the functions implementation occurs within a [TransitionHookScope],
+ * which can be used to make decisions about traversal. To block the transition, call [TransitionHookScope.blockTransition]
+ * within the hook. If `blockTransition()` is not called, the transition is allowed by default.
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of traversal guard state shared across the state machine. Must implement [ITransitionGuardState].
+ * @param G The type of traversal guard state shared across the state machine. Must implement [MachineContext].
  * @param A The type of arguments that can be passed with actions to influence traversal decisions.
  *
  * @see mdk.gsm.graph.Edge
- * @see TransitionGuardScope
- * @see mdk.gsm.builder.EdgeBuilderScope.setEdgeTransitionGuard
+ * @see TransitionHookScope
+ * @see TransitionHookScope.blockTransition
+ * @see mdk.gsm.builder.EdgeBuilderScope.onBeforeTransition
  */
-typealias TransitionGuard<V, I, G, A> =
-        suspend TransitionGuardScope<V, I, G, A>.() -> Boolean
+typealias TransitionHook<V, I, G, A> =
+        suspend TransitionHookScope<V, I, G, A>.() -> Unit
 
 /**
- * Provides context and data to a [TransitionGuard] function during edge traversal evaluation.
+ * Provides context and data to a [TransitionHook] function during edge traversal evaluation.
  *
- * This scope is automatically created and passed to a [TransitionGuard] function when the state machine
+ * This scope is automatically created and passed to a [TransitionHook] function when the state machine
  * evaluates whether an edge can be traversed.
  *
  * This scope enables traversal guards to make decisions based on:
  * - Properties of the source vertex
  * - Shared state that may have been modified by previous traversals
  * - Arguments provided with the current action
+ *
+ * To block a transition, call [blockTransition] within the hook. If `blockTransition()` is not called,
+ * the transition is allowed by default.
  *
  * @property from The source vertex of the edge being evaluated. This is the vertex the edge is outgoing from.
  * @property guardState The shared traversal guard state for the entire state machine. This single instance
@@ -49,16 +52,36 @@ typealias TransitionGuard<V, I, G, A> =
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of traversal guard state. Must implement [ITransitionGuardState].
+ * @param G The type of traversal guard state. Must implement [MachineContext].
  * @param A The type of arguments that can be passed with actions.
  *
- * @see TransitionGuard
- * @see ITransitionGuardState
+ * @see TransitionHook
+ * @see MachineContext
  * @see GraphStateMachineAction.NextArgs
  */
 @GsmBuilderScope
-class TransitionGuardScope<V, I, G, A>(
+class TransitionHookScope<V, I, G, A>(
     val from : V,
     val guardState : G?,
     val args : A?,
-) where V : IVertex<I>
+) where V : IVertex<I> {
+
+    @Volatile
+    internal var isTransitionBlocked: Boolean = false
+        private set
+
+    /**
+     * Blocks the current transition from proceeding.
+     *
+     * When called within a [TransitionHook], this prevents the state machine from traversing
+     * the associated edge. The state machine will then attempt to traverse the next available edge
+     * according to edge ordering.
+     *
+     * If this function is not called, the transition is allowed by default.
+     *
+     * @see TransitionHook
+     */
+    fun blockTransition() {
+        isTransitionBlocked = true
+    }
+}

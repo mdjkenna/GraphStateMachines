@@ -1,8 +1,8 @@
 package mdk.test.utils
 
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 
-class Test15VertexTransitionArgs : ITransitionGuardState {
+class Test15VertexTransitionArgs : MachineContext {
     @Volatile
     var blockedFrom3To2 = false
 

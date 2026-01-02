@@ -32,7 +32,7 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
                     }
                 }
                 addVertex(intermediate1) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -41,7 +41,7 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
                     }
                 }
                 addVertex(regular1) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
                     addEdge {
@@ -49,7 +49,7 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
                     }
                 }
                 addVertex(intermediate2) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                         autoAdvance()
                     }
@@ -58,7 +58,7 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
                     }
                 }
                 addVertex(regular2) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
                     addEdge {
@@ -66,7 +66,7 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
                     }
                 }
                 addVertex(end) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         beforeVisitCalls.add(vertex.id)
                     }
                 }

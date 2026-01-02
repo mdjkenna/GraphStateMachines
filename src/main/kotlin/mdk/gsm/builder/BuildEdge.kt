@@ -4,7 +4,7 @@ package mdk.gsm.builder
 
 import mdk.gsm.graph.Edge
 import mdk.gsm.graph.IVertex
-import mdk.gsm.state.TransitionGuard
+import mdk.gsm.state.TransitionHook
 
 @GsmBuilderScope
 /**
@@ -15,7 +15,9 @@ import mdk.gsm.state.TransitionGuard
  * addEdge(autoOrder = false) {
  *     setOrder(5)
  *     setTo(MyVertex.Next)
- *     setEdgeTransitionGuard { /* return true to allow transition */ true }
+ *     onBeforeTransition {
+ *         if (shouldBlock) blockTransition()
+ *     }
  * }
  * ```
  */
@@ -48,14 +50,15 @@ class EdgeBuilderScope<V, I, G, A> internal constructor(
     }
 
     /**
-     * Sets the [TransitionGuard] for this edge.
-     * @see TransitionGuard
+     * Sets the [TransitionHook] for this edge.
+     * @see TransitionHook
      *
-     * @param transitionGuard The function controlling traversal across this edge. Receives a
-     *   [mdk.gsm.state.TransitionGuardScope] and returns `true` to allow the traversal, `false` to prevent it.
+     * @param transitionHook The function controlling traversal across this edge. Receives a
+     *   [mdk.gsm.state.TransitionHookScope]. Call [mdk.gsm.state.TransitionHookScope.blockTransition]
+     *   to prevent the traversal; otherwise, the transition is allowed by default.
      */
-    fun setEdgeTransitionGuard(transitionGuard : TransitionGuard<V, I, G, A>) {
-        edgeBuilder.transitionGuard = transitionGuard
+    fun onBeforeTransition(transitionHook : TransitionHook<V, I, G, A>) {
+        edgeBuilder.transitionHook = transitionHook
     }
 }
 
@@ -64,7 +67,7 @@ internal class EdgeBuilder<V, I, G, A>(
 ) where V : IVertex<I> {
     var order = 0
     var to : I? = null
-    var transitionGuard : TransitionGuard<V, I, G, A>? = null
+    var transitionHook : TransitionHook<V, I, G, A>? = null
 
     fun build() : Edge<V, I, G, A> {
 
@@ -75,7 +78,7 @@ internal class EdgeBuilder<V, I, G, A>(
             order = order,
             from = from,
             to = localTo,
-            transitionGuard = transitionGuard
+            transitionHook = transitionHook
         )
     }
 }

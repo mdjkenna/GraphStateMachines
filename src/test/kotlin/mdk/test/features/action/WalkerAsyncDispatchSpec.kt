@@ -68,11 +68,11 @@ class WalkerAsyncDispatchSpec : BehaviorSpec({
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard { args != null && args == 100 }
+                        onBeforeTransition { if (args == null || args != 100) blockTransition() }
                     }
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard { args != null && args == 200 }
+                        onBeforeTransition { if (args == null || args != 200) blockTransition() }
                     }
                 }
                 addVertex(v2) {

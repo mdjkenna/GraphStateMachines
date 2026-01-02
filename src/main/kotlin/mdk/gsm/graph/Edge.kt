@@ -1,8 +1,8 @@
 package mdk.gsm.graph
 
-import mdk.gsm.state.ITransitionGuardState
-import mdk.gsm.state.TransitionGuard
-import mdk.gsm.state.TransitionGuardScope
+import mdk.gsm.state.MachineContext
+import mdk.gsm.state.TransitionHook
+import mdk.gsm.state.TransitionHookScope
 
 /**
  * Represents a directed outgoing edge within a graph connecting a source vertex [from] to a destination vertex [to].
@@ -12,33 +12,35 @@ import mdk.gsm.state.TransitionGuardScope
  * used to prioritize transitions when multiple edges originate from the same vertex.
  * A vertex's edges are traversed in ascending order of [order].
  *
- * The [transitionGuard] acts as a dynamic runtime condition. If the [TransitionGuard] function returns `true`, the traversal is allowed;
- * otherwise, it's blocked. If no [transitionGuard] has been set then traversal will not be blocked.
+ * The [transitionHook] acts as a dynamic runtime condition. If [TransitionHookScope.blockTransition] is called
+ * within the hook, the traversal is blocked; otherwise, it's allowed. If no [transitionHook] has been set then
+ * traversal will not be blocked.
  *
  * @param V The type of the vertices (states). Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param G The type of the edge traversal guard. Must implement [ITransitionGuardState].
+ * @param G The type of the edge traversal guard. Must implement [MachineContext].
  * @param order The priority of this edge during traversal. Lower values are evaluated first.
  * @param from The source vertex of this edge.
  * @param to The identifier of the destination vertex.
- * @param transitionGuard An optional function that controls whether this edge can be traversed at runtime.
+ * @param transitionHook An optional function that controls whether this edge can be traversed at runtime.
  */
 class Edge<out V, I, G, A> internal constructor(
     val order: Int,
     val from: V,
     val to: I,
-    private val transitionGuard: TransitionGuard<V, I, G, A>?
+    private val transitionHook: TransitionHook<V, I, G, A>?
 ) where V : IVertex<I> {
 
     internal suspend fun canProceed(
         flags: G?,
         args : A?,
     ): Boolean {
-        return if (transitionGuard == null) {
+        return if (transitionHook == null) {
             true
         } else {
-            val scope = TransitionGuardScope(from, flags, args)
-            transitionGuard.invoke(scope)
+            val scope = TransitionHookScope(from, flags, args)
+            transitionHook.invoke(scope)
+            !scope.isTransitionBlocked
         }
     }
 }

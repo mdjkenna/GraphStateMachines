@@ -2,50 +2,52 @@
 
 package mdk.gsm.util
 
+import mdk.gsm.graph.IVertex
+
 /**
- * An implementation of the [IStringVertex] interface included for convenience
- * @property id The [String] identifier of the vertex
+ * A vertex with an [id] of type [String].
+ * @property id The [String] identifier of the vertex.
  */
 data class StringVertex(
     override val id: String,
-) : IStringVertex
+) : IVertex<String>
 
 /**
- * An implementation of the [IIntVertex] interface included for convenience.
+ * A vertex with an [id] of type [Int].
  * @property id The [Int] identifier of the vertex.
  */
 data class IntVertex(
     override val id: Int
-) : IIntVertex
+) : IVertex<Int>
 
 /**
- * An implementation of the [ILongVertex] interface included for convenience.
+ * A vertex with an [id] of type [Long].
  * @property id The [Long] identifier of the vertex.
  */
 data class LongVertex(
     override val id: Long
-) : ILongVertex
+) : IVertex<Long>
 
 /**
- * An implementation of the [ICharVertex] interface included for convenience.
+ * A vertex with an [id] of type [Char].
  * @property id The [Char] identifier of the vertex.
  */
 data class CharVertex(
     override val id: Char
-) : ICharVertex
+) : IVertex<Char>
 
 /**
- * An implementation of the [IByteVertex] interface included for convenience.
+ * A vertex with an [id] of type [Byte].
  * @property id The [Byte] identifier of the vertex.
  */
 data class ByteVertex(
     override val id: Byte
-) : IByteVertex
+) : IVertex<Byte>
 
 /**
- * An implementation of the [IShortVertex] interface included for convenience.
+ * A vertex with an [id] of type [Short].
  * @property id The [Short] identifier of the vertex.
  */
 data class ShortVertex(
     override val id: Short
-) : IShortVertex
+) : IVertex<Short>

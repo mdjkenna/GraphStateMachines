@@ -32,9 +32,8 @@ class DotGenerator<V, I, G, A>(
      * @param decoration The decoration to apply
      * @return This generator instance for method chaining
      */
-    fun decorateVertex(vertexId: I, decoration: VertexDecoration): DotGenerator<V, I, G, A> {
+    fun decorateVertex(vertexId: I, decoration: VertexDecoration) {
         vertexDecorations[vertexId] = decoration
-        return this
     }
 
     /**
@@ -43,11 +42,9 @@ class DotGenerator<V, I, G, A>(
      * @param fromId The ID of the source vertex
      * @param toId The ID of the destination vertex
      * @param decoration The decoration to apply
-     * @return This generator instance for method chaining
      */
-    fun decorateEdge(fromId: I, toId: I, decoration: EdgeDecoration): DotGenerator<V, I, G, A> {
+    fun decorateEdge(fromId: I, toId: I, decoration: EdgeDecoration) {
         edgeDecorations[Pair(fromId, toId)] = decoration
-        return this
     }
 
     /**
@@ -56,11 +53,9 @@ class DotGenerator<V, I, G, A>(
      * @param fromId The ID of the source vertex
      * @param toId The ID of the destination vertex
      * @param decoration The decoration to apply
-     * @return This generator instance for method chaining
      */
-    fun decorateTransitionGuard(fromId: I, toId: I, decoration: TransitionGuardDecoration): DotGenerator<V, I, G, A> {
+    fun decorateTransitionGuard(fromId: I, toId: I, decoration: TransitionGuardDecoration) {
         guardDecorations[Pair(fromId, toId)] = decoration
-        return this
     }
 
     private fun generateDotInternal(
