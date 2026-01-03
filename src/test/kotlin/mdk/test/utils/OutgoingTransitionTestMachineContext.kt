@@ -2,7 +2,7 @@ package mdk.test.utils
 
 import mdk.gsm.state.MachineContext
 
-class OutgoingTransitionTestGuardState : MachineContext {
+class OutgoingTransitionTestMachineContext : MachineContext {
     @Volatile
     var shouldPreventTransition = false
 

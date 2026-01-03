@@ -9,15 +9,15 @@ import kotlinx.coroutines.runBlocking
 import mdk.gsm.builder.DispatcherConfig
 import mdk.gsm.builder.buildTraverserWithActions
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 import mdk.test.utils.TestVertex
 
 class DispatcherConfigSpec : BehaviorSpec({
     
     Given("A traverser using the default dispatcher settings") {
-        val guardState = TestTransitionGuardState()
+        val machineContext = TestMachineContext()
         val traverser = buildTraverserWithActions(
-            guardState = guardState,
+            machineContext = machineContext,
             dispatcherConfig = DispatcherConfig<Nothing>()
         ) {
             val v1 = TestVertex("1")
@@ -59,9 +59,9 @@ class DispatcherConfigSpec : BehaviorSpec({
                 droppedActions.add(action)
             }
         )
-        val guardState = TestTransitionGuardState()
+        val machineContext = TestMachineContext()
         val traverser = buildTraverserWithActions(
-            guardState = guardState,
+            machineContext = machineContext,
             dispatcherConfig = config
         ) {
             val v1 = TestVertex("1")
@@ -110,9 +110,9 @@ class DispatcherConfigSpec : BehaviorSpec({
             onBufferOverflow = BufferOverflow.DROP_LATEST
         )
         
-        val guardState = TestTransitionGuardState()
+        val machineContext = TestMachineContext()
         val traverser = buildTraverserWithActions(
-            guardState = guardState,
+            machineContext = machineContext,
             dispatcherConfig = config
         ) {
             val v1 = TestVertex("1")
@@ -153,9 +153,9 @@ class DispatcherConfigSpec : BehaviorSpec({
             capacity = Channel.UNLIMITED
         )
         
-        val guardState = TestTransitionGuardState()
+        val machineContext = TestMachineContext()
         val traverser = buildTraverserWithActions(
-            guardState = guardState,
+            machineContext = machineContext,
             dispatcherConfig = config
         ) {
             val v1 = TestVertex("1")
@@ -201,9 +201,9 @@ class DispatcherConfigSpec : BehaviorSpec({
             capacity = Channel.RENDEZVOUS
         )
         
-        val guardState = TestTransitionGuardState()
+        val machineContext = TestMachineContext()
         val traverser = buildTraverserWithActions(
-            guardState = guardState,
+            machineContext = machineContext,
             dispatcherConfig = config
         ) {
             val v1 = TestVertex("1")
@@ -240,9 +240,9 @@ class DispatcherConfigSpec : BehaviorSpec({
             }
         )
         
-        val guardState = TestTransitionGuardState()
+        val machineContext = TestMachineContext()
         val traverser = buildTraverserWithActions(
-            guardState = guardState,
+            machineContext = machineContext,
             dispatcherConfig = config
         ) {
             val v1 = TestVertex("1")

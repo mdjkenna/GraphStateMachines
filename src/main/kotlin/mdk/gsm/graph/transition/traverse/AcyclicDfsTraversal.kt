@@ -26,13 +26,13 @@ internal class AcyclicDfsTraversal<V, I, G, A>(
     }
 
     override suspend fun moveNext(
-        guardState: G?,
+        machineContext: G?,
         autoAdvance: Boolean,
         args: A?
     ): TraversalPathNode<V, A>? {
         visited.add(traversalPath.currentVertex.id)
 
-        val nextAdjacentStep = nextVertexOrNull(traversalPath.currentVertex, guardState, args)
+        val nextAdjacentStep = nextVertexOrNull(traversalPath.currentVertex, machineContext, args)
         if (nextAdjacentStep != null) {
             return traversalPath.appendPathHead(
                 vertex = nextAdjacentStep,
@@ -42,7 +42,7 @@ internal class AcyclicDfsTraversal<V, I, G, A>(
         } else {
             var current = traversalPath.pathHead.left
             while (current != null) {
-                val next = nextVertexOrNull(current.vertex, guardState, args)
+                val next = nextVertexOrNull(current.vertex, machineContext, args)
                 if (next == null) {
                     current = current.left
                 } else {
@@ -59,7 +59,7 @@ internal class AcyclicDfsTraversal<V, I, G, A>(
         return null
     }
 
-    private suspend fun nextVertexOrNull(vertex : V, flags: G?, args: A?): V? {
+    private suspend fun nextVertexOrNull(vertex : V, machineContext: G?, args: A?): V? {
         val sortedEdges = graph.getOutgoingEdgesSorted(vertex)
 
         if (sortedEdges == null || sortedEdges.isEmpty()) {
@@ -73,7 +73,7 @@ internal class AcyclicDfsTraversal<V, I, G, A>(
                 continue
             }
 
-            if (!edge.canProceed(flags, args)) {
+            if (!edge.canProceed(machineContext, args)) {
                 continue
             }
 

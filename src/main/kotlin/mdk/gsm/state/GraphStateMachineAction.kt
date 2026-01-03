@@ -23,7 +23,7 @@ sealed class GraphStateMachineAction<out A> {
      *
      * Note that use of arguments is completely optional and can be bypassed using the regular [Next] action.
      *
-     * @property args The arguments to pass with the next action, available to transition guards and stored in the resulting state
+     * @property args The arguments to pass with the next action, available to transition hooks and stored in the resulting state
      */
     class NextArgs<A>(
         val args: A

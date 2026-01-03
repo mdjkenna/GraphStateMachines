@@ -8,7 +8,7 @@ internal class TransitionMediator<V, I, G, A>(
     private val previousTransition: IPreviousTransition<V, I, G, A>,
     private val resettable: IResettable<V>,
     private val pathTraceable: IPathTraceable<V>,
-    private val transitionGuardState: G?,
+    private val machineContext: G?,
     private val gsmConfig: GsmConfig
 ) where V : IVertex<I> {
 
@@ -62,8 +62,8 @@ internal class TransitionMediator<V, I, G, A>(
             }
 
             if (container.beforeExitHook != null) {
-                val beforeExitScope = BeforeExitScope(args, transitionGuardState, container.vertex)
-                container.beforeExitHook(beforeExitScope)
+                val beforeExitScope = BeforeExitScope(args, machineContext, container.vertex)
+                container.beforeExitHook?.invoke(beforeExitScope)
 
                 if (beforeExitScope.noChange) {
                     return@returnTransitionState TransitionState(
@@ -75,7 +75,7 @@ internal class TransitionMediator<V, I, G, A>(
             }
 
             val traversalNode = forwardTransition.moveNext(
-                guardState = transitionGuardState,
+                machineContext = machineContext,
                 autoAdvance = autoAdvanceIteration > 0,
                 args = args
             )
@@ -90,17 +90,17 @@ internal class TransitionMediator<V, I, G, A>(
             }
 
             val nextVertex = traversalNode.vertex
-            val handler = forwardTransition.getVertexContainer(nextVertex.id)
+            val beforeEntryHook = forwardTransition.getVertexContainer(nextVertex.id)
                 ?.beforeEntryHook
 
-            if (handler != null) {
+            if (beforeEntryHook != null) {
                 val scope = BeforeEntryScope(
                     vertex = nextVertex,
-                    guardState = transitionGuardState,
+                    machineContext = machineContext,
                     args = args
                 )
 
-                handler.invoke(scope)
+                beforeEntryHook.invoke(scope)
                 if (scope.autoAdvanceTrigger) {
                     continue
                 }
@@ -144,7 +144,7 @@ internal class TransitionMediator<V, I, G, A>(
     }
 
     fun handleReset() : TransitionState<V, I, A> {
-        (transitionGuardState as? MachineContext)?.onReset()
+        (machineContext as? MachineContext)?.onReset()
         return TransitionState(
             vertex = resettable.reset(),
             transitionBounds = TransitionBounds.WithinBounds,
@@ -159,7 +159,7 @@ internal class TransitionMediator<V, I, G, A>(
     companion object {
         fun <V, I, G, A> create(
             capabilities: TransitionCapabilities<V, I, G, A>,
-            transitionGuardState: G?,
+            machineContext: G?,
             gsmConfig: GsmConfig
         ): TransitionMediator<V, I, G, A> where V : IVertex<I> {
             return TransitionMediator(
@@ -167,7 +167,7 @@ internal class TransitionMediator<V, I, G, A>(
                 previousTransition = capabilities.previous,
                 resettable = capabilities.resettable,
                 pathTraceable = capabilities.pathTraceable,
-                transitionGuardState = transitionGuardState,
+                machineContext = machineContext,
                 gsmConfig = gsmConfig
             )
         }

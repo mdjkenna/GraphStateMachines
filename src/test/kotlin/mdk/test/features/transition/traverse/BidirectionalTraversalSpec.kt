@@ -18,7 +18,7 @@ import mdk.test.utils.TestBuilderUtils.v5
 import mdk.test.utils.TestBuilderUtils.v6
 import mdk.test.utils.TestBuilderUtils.v7
 import mdk.test.utils.TestBuilderUtils.v8
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 
 class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
 
@@ -240,7 +240,7 @@ class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
         )
 
         private fun createParam2(title: String, edgeTraversalType: EdgeTraversalType): TestParameters {
-            val traverser = TestBuilderUtils.build8VertexGraphStateMachine(TestTransitionGuardState(), edgeTraversalType)
+            val traverser = TestBuilderUtils.build8VertexGraphStateMachine(TestMachineContext(), edgeTraversalType)
 
             return TestParameters(
                 title,
@@ -251,7 +251,7 @@ class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
 
         private fun createParam1(title: String, edgeTraversalType: EdgeTraversalType): TestParameters {
             val traverser = mdk.test.scenarios.GraphScenarios.elevenVertexDAGTraverser(
-                TestTransitionGuardState(),
+                TestMachineContext(),
                 edgeTraversalType
             )
 

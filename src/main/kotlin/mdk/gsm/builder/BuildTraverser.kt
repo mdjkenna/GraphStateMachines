@@ -20,20 +20,20 @@ import mdk.gsm.state.traverser.TraverserStateImplementation
 
 
 /**
- * Builds a graph-backed traverser with a custom transition guard state and typed per-action arguments.
+ * Builds a graph-backed traverser with a custom machine context and typed per-action arguments.
  *
  * Use this overload when you need to pass contextual data with an action via
- * [GraphStateMachineAction.NextArgs] of type [A]. The value is delivered to transition guards
+ * [GraphStateMachineAction.NextArgs] of type [A]. The value is delivered to transition hooks
  * and stored on the resulting [mdk.gsm.state.TransitionState.args]. The traverser supports
  * forward and backward navigation and maintains transition history.
  *
  * Overload selection:
- * - Choose this overload if you need both a custom guard state ([G]) and per-action arguments ([A]).
+ * - Choose this overload if you need both a machine context ([G]) and per-action arguments ([A]).
  * - If you do not need per-action arguments, prefer [buildTraverser] without [A].
- * - If you also do not need a custom guard state, prefer the simplest [buildTraverser] overload.
+ * - If you also do not need a machine context, prefer the simplest [buildTraverser] overload.
  *
  * Parameters:
- * - [guardState]: The initial state shared by all transition guards.
+ * - [machineContext]: The initial machine context shared by all transition hooks.
  * - [coroutineScope]: Scope used for dispatch; defaults to [StateMachineScopeFactory.newScope].
  * - [dispatcherConfig]: Controls channel capacity/overflow for action dispatching.
  * - [builderFunction]: DSL to declare vertices, edges, and options.
@@ -45,7 +45,7 @@ import mdk.gsm.state.traverser.TraverserStateImplementation
  * Example:
  * ```kotlin
  * val traverser = buildTraverserWithActions<MyVertex, String, Flags, Long>(
- *     guardState = Flags()
+ *     machineContext = Flags()
  * ) {
  *     buildGraph(startAtVertex = MyVertex.Start) {
  *         // define vertices and edges
@@ -57,11 +57,11 @@ import mdk.gsm.state.traverser.TraverserStateImplementation
  *
  * @param V The type of vertices (states). Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of transition guard state. Must implement [MachineContext].
+ * @param G The type of machine context. Must implement [MachineContext].
  * @param A The type of per-action arguments used with [GraphStateMachineAction.NextArgs].
  */
 fun <V, I, G, A> buildTraverserWithActions(
-    guardState : G,
+    machineContext : G,
     coroutineScope : CoroutineScope = StateMachineScopeFactory.newScope(),
     dispatcherConfig: DispatcherConfig<A> = DispatcherConfig(),
     builderFunction : TraverserBuilderScope<V, I, G, A>.() -> Unit
@@ -71,7 +71,7 @@ fun <V, I, G, A> buildTraverserWithActions(
     val traverserBuilderScope = TraverserBuilderScope(graphStateMachineBuilder)
     builderFunction(traverserBuilderScope)
 
-    graphStateMachineBuilder.transitionGuardState = guardState
+    graphStateMachineBuilder.machineContext = machineContext
 
     val gsm = graphStateMachineBuilder.build()
 
@@ -84,21 +84,21 @@ fun <V, I, G, A> buildTraverserWithActions(
 }
 
 /**
- * Builds a graph-backed traverser with a custom transition guard state and no per-action arguments.
+ * Builds a graph-backed traverser with a custom machine context and no per-action arguments.
  *
- * Use this overload when you want guards backed by shared state ([G]), but you do not need to pass
+ * Use this overload when you want hooks backed by machine context ([G]), but you do not need to pass
  * values with each action. The traverser supports forward and backward navigation and maintains
  * transition history.
  *
  * Overload selection:
- * - Choose this overload if you need custom guard state ([G]) but not per-action arguments.
+ * - Choose this overload if you need machine context ([G]) but not per-action arguments.
  * - If you need per-action arguments as well, prefer [buildTraverserWithActions].
  * - If you need neither, prefer the simplest [buildTraverser] overload.
  *
  * Example:
  * ```kotlin
- * val traverser = buildGuardedTraverser<MyVertex, String, Flags>(
- *     guardState = Flags()
+ * val traverser = buildTraverserWithContext<MyVertex, String, Flags>(
+ *     machineContext = Flags()
  * ) {
  *     buildGraph(startAtVertex = MyVertex.Start) {
  *         // define vertices and edges
@@ -108,8 +108,8 @@ fun <V, I, G, A> buildTraverserWithActions(
  *
  * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param G The transition guard state shared across edges.
- * @param guardState The initial state for transition guards, shared across all edges.
+ * @param G The machine context shared across edges.
+ * @param machineContext The initial machine context, shared across all edges.
  * @param coroutineScope The coroutine scope used for dispatching actions. Defaults to [StateMachineScopeFactory.newScope].
  * @param dispatcherConfig Configuration for the dispatcher channel. Controls buffering and overflow behavior.
  * @param builderFunction The builder scope function for configuring the traverser.
@@ -117,8 +117,8 @@ fun <V, I, G, A> buildTraverserWithActions(
  * @throws IllegalStateException If the traverser is not configured correctly when attempting to build.
  */
 @GsmBuilderScope
-fun <V, I, G> buildGuardedTraverser(
-    guardState : G,
+fun <V, I, G> buildTraverserWithContext(
+    machineContext : G,
     coroutineScope : CoroutineScope = StateMachineScopeFactory.newScope(),
     dispatcherConfig: DispatcherConfig<Nothing> = DispatcherConfig(),
     builderFunction : TraverserBuilderScope<V, I, G, Nothing>.() -> Unit
@@ -130,7 +130,7 @@ fun <V, I, G> buildGuardedTraverser(
     val traverserBuilderScope = TraverserBuilderScope(graphStateMachineBuilder)
     builderFunction(traverserBuilderScope)
 
-    graphStateMachineBuilder.transitionGuardState = guardState
+    graphStateMachineBuilder.machineContext = machineContext
 
     val gsm = graphStateMachineBuilder.build()
 
@@ -143,15 +143,15 @@ fun <V, I, G> buildGuardedTraverser(
 }
 
 /**
- * Builds a traverser without custom guard state and without per-action arguments (the simplest overload).
+ * Builds a traverser without machine context and without per-action arguments (the simplest overload).
  *
- * Use this when your transitions depend only on the graph structure and you do not require guard state
+ * Use this when your transitions depend only on the graph structure and you do not require machine context
  * or passing values with actions. The traverser supports forward and backward navigation and maintains
- * transition history. A no-op guard state is used internally and the action argument type is [Nothing].
+ * transition history. A no-op machine context is used internally and the action argument type is [Nothing].
  *
  * Overload selection:
- * - Choose this overload if you need neither custom guard state nor per-action arguments.
- * - If you need guard state, prefer [buildGuardedTraverser].
+ * - Choose this overload if you need neither machine context nor per-action arguments.
+ * - If you need machine context, prefer [buildTraverserWithContext].
  * - If you also need per-action arguments, prefer [buildTraverserWithActions].
  *
  * Example:
@@ -180,7 +180,7 @@ fun <V, I> buildTraverser(
 ) : Traverser<V, I, Nothing, Nothing> where V : IVertex<I> {
 
     val graphStateMachineBuilder = GraphStateMachineBuilder<V, I, Nothing, Nothing>()
-    graphStateMachineBuilder.transitionGuardState = null
+    graphStateMachineBuilder.machineContext = null
 
     val traverserBuilderScope = TraverserBuilderScope(graphStateMachineBuilder)
     builderFunction(traverserBuilderScope)
@@ -202,16 +202,16 @@ fun <V, I> buildTraverser(
  * It exposes methods for setting up the graph, defining the start vertex, configuring traversal behavior,
  * and other traverser properties.
  *
- * Instances of this class are created by the [buildTraverser], [buildGuardedTraverser], and [buildTraverserWithActions]
+ * Instances of this class are created by the [buildTraverser], [buildTraverserWithContext], and [buildTraverserWithActions]
  * functions and passed to the builder function provided to those functions.
  *
  * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param G The traversal guard state shared across edges. Must implement [MachineContext].
- * @param A The type of arguments that can be passed with actions to influence traversal decisions.
+ * @param G The machine context shared across edges. Must implement [MachineContext].
+ * @param A The type of arguments that can be passed with actions to influence transition decisions.
  *
  * @see buildTraverser
- * @see buildGuardedTraverser
+ * @see buildTraverserWithContext
  * @see buildTraverserWithActions
  * @see GraphStateMachineBuilder
  */
@@ -286,11 +286,11 @@ class TraverserBuilderScope<V, I, G, A> @PublishedApi internal constructor(
     }
 
     /**
-     * Sets the transition guard state for the entire traverser.
-     * Can be ignored if not building a traverser with transition guards; however, it must not be null if specified as a type parameter.
+     * Sets the machine context for the entire traverser.
+     * Can be ignored if not building a traverser with transition hooks; however, it must not be null if specified as a type parameter.
      */
-    fun setTransitionGuardState(guardState: G) {
-        graphStateMachineBuilder.transitionGuardState = guardState
+    fun setMachineContext(machineContext: G) {
+        graphStateMachineBuilder.machineContext = machineContext
     }
 
     /**

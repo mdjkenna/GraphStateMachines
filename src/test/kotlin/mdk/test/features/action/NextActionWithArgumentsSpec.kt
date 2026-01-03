@@ -5,14 +5,14 @@ import io.kotest.matchers.shouldBe
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.scenarios.GraphScenarios
 import mdk.test.utils.AssertionUtils
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 
 class NextActionWithArgumentsSpec : BehaviorSpec(
     body = {
         Given("A traverser with conditional edges based on NextArgs values") {
-            val guardState = TestTransitionGuardState()
+            val machineContext = TestMachineContext()
             val traverser = GraphScenarios.nextActionWithArgsTraverser(
-                guardState = guardState,
+                machineContext = machineContext,
                 argsGoTo3 = TestArgs(TestArgs.ARGS_GO_TO_3),
                 argsGoTo4 = TestArgs(TestArgs.ARGS_GO_TO_4)
             )
@@ -34,7 +34,7 @@ class NextActionWithArgumentsSpec : BehaviorSpec(
                 }
             }
 
-            When("A NextArgs action is dispatched with an argument matching the edge guard to vertex 4") {
+            When("A NextArgs action is dispatched with an argument matching the transition hook to vertex 4") {
                 val argsActionResult = traverser.dispatchAndAwaitResult(
                     GraphStateMachineAction.NextArgs(
                         TestArgs(TestArgs.ARGS_GO_TO_4)
@@ -68,7 +68,7 @@ class NextActionWithArgumentsSpec : BehaviorSpec(
                 }
             }
 
-            When("A NextArgs action is dispatched with an argument matching the edge guard to vertex 3") {
+            When("A NextArgs action is dispatched with an argument matching the transition hook to vertex 3") {
                 val nextActionResult = traverser.dispatchAndAwaitResult(
                     GraphStateMachineAction.NextArgs(
                         TestArgs(TestArgs.ARGS_GO_TO_3)

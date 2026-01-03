@@ -92,7 +92,7 @@ fun main() {
 In this example, edges are traversed using DFS, with neighbouring edges explored in the order they are added to a vertex. 
 For vertex "one", the edge to "two" will be tried first, followed by the edge to "three". 
 The traversal order can also be explicitly set using the `order` parameter in `addEdge`.
-Note that several factory functions exist for different use cases: `buildTraverser` (simplest, no guard state), `buildGuardedTraverser` (with guard state), and `buildTraverserWithActions` (with guard state and action arguments). The simplest form is shown here.
+Note that several factory functions exist for different use cases: `buildTraverser` (simplest, no machine context), `buildTraverserWithContext` (with machine context), and `buildTraverserWithActions` (with machine context and action arguments). The simplest form is shown here.
 
 ## Implementations of IVertex
 

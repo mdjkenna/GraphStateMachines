@@ -21,7 +21,7 @@ There are two points to consider when designing a `Traverser` on a graph with cy
 Here's a simple example of using a transition hook to limit the number of times a cycle is taken:
 
 ```kotlin
-class GuardState(
+class MachineContextImpl(
     var cycleCount: Int = 0
 ) : MachineContext {
     override fun onReset() {
@@ -29,15 +29,15 @@ class GuardState(
     }
 }
 
-buildGuardedTraverser(GuardState()) {
+val traverser = buildTraverserWithContext(MachineContextImpl()) {
     setTraversalType(EdgeTraversalType.DFSCyclic)
     buildGraph(stateOne) {
         addVertex(stateOne) {
             addEdge {
                 setTo(stateOne)
                 onBeforeTransition {
-                    if (guardState.cycleCount < 3) {
-                        guardState.cycleCount++
+                    if (machineContext.cycleCount < 3) {
+                        machineContext.cycleCount++
                     } else {
                         blockTransition()
                     }

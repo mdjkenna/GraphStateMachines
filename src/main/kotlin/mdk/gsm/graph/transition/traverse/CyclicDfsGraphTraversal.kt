@@ -18,13 +18,13 @@ internal class CyclicDfsGraphTraversal<V, I, G, A>(
     private val visited: HashMap<I, Int> = HashMap()
 
     override suspend fun moveNext(
-        guardState: G?,
+        machineContext: G?,
         autoAdvance: Boolean,
         args: A?
     ): TraversalPathNode<V, A>? {
         visited[traversalPath.currentVertex.id] = VertexColor.GRAY
 
-        val nextAdjacentStep = nextVertexOrNull(traversalPath.currentVertex, guardState, args)
+        val nextAdjacentStep = nextVertexOrNull(traversalPath.currentVertex, machineContext, args)
         if (nextAdjacentStep != null) {
             return traversalPath.appendPathHead(
                 vertex = nextAdjacentStep,
@@ -35,7 +35,7 @@ internal class CyclicDfsGraphTraversal<V, I, G, A>(
 
         var current = traversalPath.pathHead.left
         while (current != null) {
-            val next = nextVertexOrNull(current.vertex, guardState, args)
+            val next = nextVertexOrNull(current.vertex, machineContext, args)
             if (next == null) {
                 current = current.left
             } else {
@@ -53,7 +53,7 @@ internal class CyclicDfsGraphTraversal<V, I, G, A>(
 
     private suspend fun nextVertexOrNull(
         vertex: V,
-        flags: G?,
+        machineContext: G?,
         args : A?
     ): V? {
 
@@ -67,7 +67,7 @@ internal class CyclicDfsGraphTraversal<V, I, G, A>(
                 continue
             }
 
-            if (!edge.canProceed(flags, args)) {
+            if (!edge.canProceed(machineContext, args)) {
                 continue
             }
 

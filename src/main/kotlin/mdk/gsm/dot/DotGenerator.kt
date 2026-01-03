@@ -1,7 +1,7 @@
 package mdk.gsm.dot
 
 import mdk.gsm.dot.decorations.EdgeDecoration
-import mdk.gsm.dot.decorations.TransitionGuardDecoration
+import mdk.gsm.dot.decorations.TransitionHookDecoration
 import mdk.gsm.dot.decorations.VertexDecoration
 import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
@@ -13,7 +13,7 @@ import mdk.gsm.state.GraphSupplier
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of transition guard state.
+ * @param G The type of machine context.
  * @param A The type of arguments that can be passed with actions.
  * @param config Configuration for DOT graph layout and appearance.
  */
@@ -23,7 +23,7 @@ class DotGenerator<V, I, G, A>(
 
     private val vertexDecorations = mutableMapOf<I, VertexDecoration>()
     private val edgeDecorations = mutableMapOf<Pair<I, I>, EdgeDecoration>()
-    private val guardDecorations = mutableMapOf<Pair<I, I>, TransitionGuardDecoration>()
+    private val hookDecorations = mutableMapOf<Pair<I, I>, TransitionHookDecoration>()
 
     /**
      * Set decoration for a vertex.
@@ -48,14 +48,14 @@ class DotGenerator<V, I, G, A>(
     }
 
     /**
-     * Set decoration for a traversal guard.
+     * Set decoration for a transition hook.
      *
      * @param fromId The ID of the source vertex
      * @param toId The ID of the destination vertex
      * @param decoration The decoration to apply
      */
-    fun decorateTransitionGuard(fromId: I, toId: I, decoration: TransitionGuardDecoration) {
-        guardDecorations[Pair(fromId, toId)] = decoration
+    fun decorateTransitionHook(fromId: I, toId: I, decoration: TransitionHookDecoration) {
+        hookDecorations[Pair(fromId, toId)] = decoration
     }
 
     private fun generateDotInternal(
@@ -106,7 +106,7 @@ class DotGenerator<V, I, G, A>(
                 val edgeKey = Pair(fromId, toId)
 
                 val edgeDecoration = edgeDecorations[edgeKey]
-                val guardDecoration = guardDecorations[edgeKey]
+                val hookDecoration = hookDecorations[edgeKey]
 
                 val edgeLabel = buildString {
                     append("\"")
@@ -128,8 +128,8 @@ class DotGenerator<V, I, G, A>(
                 val styleAttr = edgeDecoration?.style?.let { "style=\"$it\", " } ?: ""
                 val colorAttr = "${styleAttr}color=\"$color\", fontcolor=\"$fontColor\", penwidth=$penWidth"
 
-                if (guardDecoration != null) {
-                    sb.appendLine("  \"$fromId\" -> \"$toId\" [label=$edgeLabel, labeltooltip=\"${guardDecoration.description}\", $colorAttr];")
+                if (hookDecoration != null) {
+                    sb.appendLine("  \"$fromId\" -> \"$toId\" [label=$edgeLabel, labeltooltip=\"${hookDecoration.description}\", $colorAttr];")
                 } else {
                     sb.appendLine("  \"$fromId\" -> \"$toId\" [label=$edgeLabel, $colorAttr];")
                 }

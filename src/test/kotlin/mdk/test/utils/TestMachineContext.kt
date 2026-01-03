@@ -2,7 +2,7 @@ package mdk.test.utils
 
 import mdk.gsm.state.MachineContext
 
-class TestTransitionGuardState : MachineContext {
+class TestMachineContext : MachineContext {
     @Volatile
     var blockedGoingTo2 = false
 

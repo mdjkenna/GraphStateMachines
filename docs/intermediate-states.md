@@ -28,7 +28,7 @@ The core benefit of this approach is that the *entire* behavior of the system is
 
 When a vertex is marked as an intermediate state:
 
-1. Just before a vertex `V1` is visited, its `onBeforeEntry` handler is executed, and the `autoAdvance` function is invoked within the `BeforeEntryScope`.
+1. Just before a vertex `V1` is visited, its `onBeforeEntry` hook is executed, and the `autoAdvance` function is invoked within the `BeforeEntryScope`.
 2. If using a traverser - the vertex is recorded in the traced path but never published as the current state (Walkers don't retain history).
 3. The state machine immediately advances to the next state and `V1` was never published, making it an intermediate state.
 
@@ -36,7 +36,7 @@ Note when processing previous actions the intermediate states are skipped over.
 
 ## Creating Intermediate States
 
-To mark a vertex as an intermediate state, call `autoAdvance()` within its `onBeforeEntry` handler:
+To mark a vertex as an intermediate state, call `autoAdvance()` within its `onBeforeEntry` hook:
 
 ```kotlin
 addVertex(loadingState) {

@@ -4,13 +4,13 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.scenarios.GraphScenarios
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 
 class WalkerActionWithArgumentsSpec : BehaviorSpec({
     Given("A walker with conditional edges based on action arguments") {
-        val guardState = TestTransitionGuardState()
+        val machineContext = TestMachineContext()
         val walker = GraphScenarios.nextActionWithArgsWalker(
-            guardState = guardState,
+            machineContext = machineContext,
             argsGoTo3 = TestArgs(TestArgs.ARGS_GO_TO_3),
             argsGoTo4 = TestArgs(TestArgs.ARGS_GO_TO_4)
         )

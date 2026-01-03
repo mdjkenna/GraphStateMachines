@@ -9,7 +9,7 @@ import mdk.test.utils.AssertionUtils.assertTracedPathWithCurrentState
 import mdk.test.utils.TestBuilderUtils
 
 
-class TestTransitionGuardState : MachineContext {
+class SimpleMachineContext : MachineContext {
     override fun onReset() { /* No state to reset */ }
 }
 
@@ -18,13 +18,13 @@ class IntermediateStateSpec : BehaviorSpec({
     Given("A graph state machine with intermediate states") {
         val ids = TestBuilderUtils.IntermediateTestingIds
         val publishedStates = mutableListOf<String>()
-        val beforeVisitCalls = mutableListOf<String>()
-        val guardState = TestTransitionGuardState()
+        val beforeEntryCalls = mutableListOf<String>()
+        val machineContext = SimpleMachineContext()
         
         val (state, dispatcher) =
             TestBuilderUtils.buildIntermediateTestGraph(
-                guardState = guardState,
-                beforeVisitCalls = beforeVisitCalls
+                machineContext = machineContext,
+                beforeEntryCalls = beforeEntryCalls
             )
 
         publishedStates.add(state.current.value.vertex.id)
@@ -58,11 +58,11 @@ class IntermediateStateSpec : BehaviorSpec({
 
             Then(
                 """
-                    'onBeforeEntry' has only been called on the vertices which have been visited by progressing forwards using NEXT action.
+                    'onBeforeEntry' has only been called on the vertices which have been entered by progressing forwards using NEXT action.
                     This means the start vertex should be excluded, as it was not arrived at by a NEXT action.
                     """.trimIndent()
             ) {
-                beforeVisitCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1)
+                beforeEntryCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1)
             }
         }
 
@@ -73,7 +73,7 @@ class IntermediateStateSpec : BehaviorSpec({
 
             Then(
 
-                "Again, the current state is a regular state, the visited intermediate state is present on the path"
+                "Again, the current state is a regular state, the entered intermediate state is present on the path"
             ) {
                 assertTracedPathWithCurrentState(
                     listOf(
@@ -92,7 +92,7 @@ class IntermediateStateSpec : BehaviorSpec({
             Then(
                 "'onBeforeEntry' has been called on all vertices that have been arrived at by a next action"
             ) {
-                beforeVisitCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1, ids.INTERMEDIATE_2, ids.REGULAR_2)
+                beforeEntryCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1, ids.INTERMEDIATE_2, ids.REGULAR_2)
             }
         }
 
@@ -124,7 +124,7 @@ class IntermediateStateSpec : BehaviorSpec({
             }
 
             Then("'onBeforeEntry' hook has been invoked again on the forward traversal") {
-                beforeVisitCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1, ids.INTERMEDIATE_2, ids.REGULAR_2, ids.INTERMEDIATE_2, ids.REGULAR_2)
+                beforeEntryCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1, ids.INTERMEDIATE_2, ids.REGULAR_2, ids.INTERMEDIATE_2, ids.REGULAR_2)
             }
 
             Then(

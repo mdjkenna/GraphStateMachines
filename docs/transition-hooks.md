@@ -13,7 +13,7 @@ Transition hooks are defined in edge builders and apply to that specific edge.
 addEdge {
     setTo(exampleVertex)
     onBeforeTransition {
-        if (guardState.isExampleTransitionBlocked) blockTransition()
+        if (machineContext.isExampleTransitionBlocked) blockTransition()
     }
 }
 ```
@@ -21,7 +21,7 @@ addEdge {
 Calling `blockTransition()` within the transition hook function blocks exploration across its edge.
 If `blockTransition()` is not called, the transition is allowed by default.
 Transition hook functions have a `TransitionHookScope` receiver, which provides data to the implementer,
-such as `guardState` shown above. 
+such as `machineContext` shown above. 
 
 Transition hooks can also access arguments passed with actions:
 
@@ -48,7 +48,7 @@ There is a single instance per graph, which can be passed as a parameter into on
 It can also be omitted, in which case no `MachineContext` implementation is needed.
 
 ```kotlin
-class GuardState(
+class MachineContextFlags(
     var isSomeTransitionBlocked: Boolean = false
 ) : MachineContext {
     override fun onReset() {
@@ -56,13 +56,13 @@ class GuardState(
     }
 }
 
-val traverser = buildGuardedTraverser(GuardState()) {
+val traverser = buildTraverserWithContext(MachineContextFlags()) {
     buildGraph(startVertex) {
         addVertex(startVertex) {
             addEdge {
                 setTo(nextVertex)
                 onBeforeTransition {
-                    if (guardState.isSomeTransitionBlocked) blockTransition()
+                    if (machineContext.isSomeTransitionBlocked) blockTransition()
                 }
             }
         }

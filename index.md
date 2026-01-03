@@ -16,10 +16,10 @@ A Kotlin library for creating state machines using directed graphs where all pos
 
 ## Designing State Machines
 
-- [Using Cycles](docs/cycles.md) - Implement cyclic graphs and manage infinite loops using transition guards.
+- [Using Cycles](docs/cycles.md) - Implement cyclic graphs and manage infinite loops using transition hooks.
 - [Intermediate States](docs/intermediate-states.md) - Represent side effects as explicit states within the graph model.
-- [Transition Guards](docs/transition-guards.md) - Dynamically constrain transitions using transition guards and manage shared guard state.
-- [Handlers](docs/handlers.md) - Execute custom logic at specific points during state transitions.
+- [Transition Hooks](docs/transition-hooks.md) - Dynamically constrain transitions using transition hooks and manage shared machine context.
+- [Entry and Exit Hooks](docs/hooks.md) - Execute custom logic at specific points during state transitions.
 
 ## Using State Machines
 

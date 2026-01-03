@@ -10,9 +10,9 @@ import mdk.test.utils.Test15VertexTransitionArgs
 class CyclicPathTransitionSpec : BehaviorSpec({
 
     Given("A 15-vertex graph with multiple cyclic paths using cyclic DFS traversal") {
-        val transitionGuardState = Test15VertexTransitionArgs()
+        val machineContext = Test15VertexTransitionArgs()
         val traverser = GraphScenarios.complex15VertexTraverser(
-            guardState = transitionGuardState,
+            machineContext = machineContext,
             edgeTraversalType = EdgeTraversalType.DFSCyclic
         )
         
@@ -31,8 +31,8 @@ class CyclicPathTransitionSpec : BehaviorSpec({
             }
         }
 
-        When("A traversal guard breaks the cycle's infinite loop") {
-            transitionGuardState.blockedFrom3To2 = true
+        When("A transition hook breaks the cycle's infinite loop") {
+            machineContext.blockedFrom3To2 = true
 
             repeat(14) {
                 traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
@@ -48,9 +48,9 @@ class CyclicPathTransitionSpec : BehaviorSpec({
             }
         }
 
-        When("A traversal guard brakes the second loop encountered after the first loop was exited") {
+        When("A transition hook brakes the second loop encountered after the first loop was exited") {
 
-            transitionGuardState.blockedFrom8To9 = true
+            machineContext.blockedFrom8To9 = true
 
             repeat(2) {
                 traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)

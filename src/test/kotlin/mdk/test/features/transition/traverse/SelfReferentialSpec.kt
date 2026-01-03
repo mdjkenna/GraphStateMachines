@@ -1,7 +1,7 @@
 package mdk.test.features.transition.traverse
 
 import io.kotest.core.spec.style.BehaviorSpec
-import mdk.gsm.builder.buildGuardedTraverser
+import mdk.gsm.builder.buildTraverserWithContext
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.MachineContext
@@ -10,13 +10,13 @@ import mdk.test.utils.AssertionUtils
 
 class SelfReferentialSpec : BehaviorSpec({
 
-    Given("A graph with a self-referential vertex limited to 7 cycles by guard state") {
+    Given("A graph with a self-referential vertex limited to 7 cycles by machine context") {
         var cycleCount = 0
-        val transitionGuardState = object : MachineContext {
+        val machineContext = object : MachineContext {
             override fun onReset() { cycleCount = 0 }
         }
 
-        val traverser = buildGuardedTraverser(transitionGuardState) {
+        val traverser = buildTraverserWithContext(machineContext) {
             val v1 = StringVertex("1")
             val v2 = StringVertex("2")
             setTraversalType(EdgeTraversalType.DFSCyclic)
@@ -56,7 +56,7 @@ class SelfReferentialSpec : BehaviorSpec({
             }
         }
 
-        When("Advancing once more after reaching the cycle guard limit") {
+        When("Advancing once more after reaching the cycle hook limit") {
             traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
 
             Then("The traversal should proceed to vertex '2' instead of continuing the cycle") {

@@ -4,13 +4,13 @@ import mdk.gsm.builder.GsmBuilderScope
 import mdk.gsm.graph.IVertex
 
 /**
- * Provides context and control capabilities to vertex pre-entry handlers.
+ * Provides context and control capabilities to vertex pre-entry hooks.
  *
  * This scope is automatically created and passed to a [BeforeEntryHook] function when the state machine
  * is about to transition to a vertex. It provides access to:
  *
- * @property vertex The vertex that is about to be visited (become the current state).
- * @property guardState The shared machine context for the entire state machine.
+ * @property vertex The vertex that is about to be entered (become the current state).
+ * @property machineContext The shared machine context for the entire state machine.
  * @property args Any arguments passed with the current action. May be null if no arguments were provided.
  *
  * @param V The type of vertices in the graph. Must implement [mdk.gsm.graph.IVertex].
@@ -24,17 +24,17 @@ import mdk.gsm.graph.IVertex
 @GsmBuilderScope
 class BeforeEntryScope<V, I, G, A>(
     val vertex: V,
-    val guardState: G?,
+    val machineContext: G?,
     val args : A?
 ) where V : IVertex<I> {
 
     internal var autoAdvanceTrigger = false
 
     /**
-     * Calling this function signals that the vertex state about to be visited should be skipped
+     * Calling this function signals that the vertex state about to be entered should be skipped
      * without publishing this vertex as the current state.
      *
-     * When called, the handler's vertex becomes an 'intermediate state'.
+     * When called, the hook's vertex becomes an 'intermediate state'.
      *
      * The subsequent state in the state graph will be adopted as the current state instead.
      * Intermediate states are 'in-between' states that function as 'effects' that are explicitly represented in the state machine.
@@ -50,9 +50,9 @@ class BeforeEntryScope<V, I, G, A>(
 }
 
 /**
- * The handler is invoked when the state machine is about to transition to a new vertex, but before
+ * The hook is invoked when the state machine is about to transition to a new vertex, but before
  * that vertex is published as the current state. It receives a [BeforeEntryScope] as its receiver,
- * providing access to the vertex being visited, the shared machine context, and any arguments
+ * providing access to the vertex being entered, the shared machine context, and any arguments
  * passed with the current action.
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].

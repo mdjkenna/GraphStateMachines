@@ -8,14 +8,14 @@ import kotlinx.coroutines.withTimeout
 import mdk.gsm.builder.buildWalkerWithActions
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.scenarios.GraphScenarios
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 import mdk.test.utils.TestVertex
 
 class WalkerDispatchMethodsSpec : BehaviorSpec({
     
     Given("A walker for testing all dispatch method overloads") {
-        val guardState = TestTransitionGuardState()
-        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
+        val machineContext = TestMachineContext()
+        val walker = GraphScenarios.linearThreeVertexWalker(machineContext)
         
         When("launchDispatch(Next) is called for fire-and-forget execution") {
             walker.launchDispatch(GraphStateMachineAction.Next)
@@ -75,8 +75,8 @@ class WalkerDispatchMethodsSpec : BehaviorSpec({
     }
     
     Given("A walker with action arguments for testing NextArgs dispatch variants") {
-        val guardState = TestTransitionGuardState()
-        val walker = buildWalkerWithActions<TestVertex, String, TestTransitionGuardState, Int>(guardState) {
+        val machineContext = TestMachineContext()
+        val walker = buildWalkerWithActions<TestVertex, String, TestMachineContext, Int>(machineContext) {
             val v1 = TestVertex("1")
             val v2 = TestVertex("2")
             val v3 = TestVertex("3")
@@ -139,8 +139,8 @@ class WalkerDispatchMethodsSpec : BehaviorSpec({
     }
     
     Given("A walker for testing component destructuring operators") {
-        val guardState = TestTransitionGuardState()
-        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
+        val machineContext = TestMachineContext()
+        val walker = GraphScenarios.linearThreeVertexWalker(machineContext)
         
         When("The walker is destructured using component1() and component2()") {
             val (state, dispatcher) = walker
@@ -166,10 +166,10 @@ class WalkerDispatchMethodsSpec : BehaviorSpec({
     }
     
     Given("A walker for testing walkerState and walkerDispatcher properties") {
-        val guardState = TestTransitionGuardState()
+        val machineContext = TestMachineContext()
         val v1 = TestVertex("1")
         val v2 = TestVertex("2")
-        val walker = GraphScenarios.conditionalWithArgsWalker<Nothing>(guardState, { true }, v1, v2)
+        val walker = GraphScenarios.conditionalWithArgsWalker<Nothing>(machineContext, { true }, v1, v2)
         
         When("Accessing walkerState property") {
             val state = walker.walkerState

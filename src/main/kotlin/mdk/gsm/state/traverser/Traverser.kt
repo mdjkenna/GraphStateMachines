@@ -18,7 +18,7 @@ import mdk.gsm.state.GraphSupplier
  *
  * @param V The type of vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param G The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.MachineContext].
+ * @param G The type of machine context, which is shared across all transitions. Must implement [mdk.gsm.state.MachineContext].
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
  * @see TraverserDispatcher For dispatching actions to the traverser

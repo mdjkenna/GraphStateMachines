@@ -19,20 +19,20 @@ import mdk.gsm.state.walker.WalkerImplementation
 import mdk.gsm.state.walker.WalkerStateImplementation
 
 /**
- * Builds a graph based walker with a custom transition guard state and typed per-action arguments.
+ * Builds a graph based walker with a custom machine context and typed per-action arguments.
  *
  * A walker only supports forward movement and does not keep a history of visited states.
  * Use this overload when you need to pass contextual data with actions via
- * [GraphStateMachineAction.NextArgs] of type [A]. The value is delivered to transition guards
+ * [GraphStateMachineAction.NextArgs] of type [A]. The value is delivered to transition hooks
  * and stored on the resulting [mdk.gsm.state.TransitionState.args].
  *
  * Overload selection:
- * - Choose this overload if you need both a custom guard state ([G]) and per-action arguments ([A]).
+ * - Choose this overload if you need both a custom machine context ([G]) and per-action arguments ([A]).
  * - If you do not need per-action arguments, prefer [buildWalker] without [A].
- * - If you also do not need a custom guard state, prefer the simplest [buildWalker] overload.
+ * - If you also do not need a custom machine context, prefer the simplest [buildWalker] overload.
  *
  * Parameters:
- * - [guardState]: The initial state shared by all transition guards.
+ * - [machineContext]: The initial machine context shared by all transition hooks.
  * - [coroutineScope]: Scope used for dispatch; defaults to [StateMachineScopeFactory.newScope].
  * - [dispatcherConfig]: Controls channel capacity/overflow for action dispatching.
  * - [builderFunction]: DSL to declare vertices, edges, and options.
@@ -44,7 +44,7 @@ import mdk.gsm.state.walker.WalkerStateImplementation
  * Example:
  * ```kotlin
  * val walker = buildWalkerWithActions<MyVertex, String, Flags, Long>(
- *     guardState = Flags()
+ *     machineContext = Flags()
  * ) {
  *     buildGraph(startAtVertex = MyVertex.Start) {
  *         // define vertices and edges
@@ -54,11 +54,11 @@ import mdk.gsm.state.walker.WalkerStateImplementation
  *
  * @param V The type of vertices (states). Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of transition guard state. Must implement [MachineContext].
+ * @param G The type of machine context. Must implement [MachineContext].
  * @param A The type of per-action arguments used with [GraphStateMachineAction.NextArgs].
  */
 fun <V, I, G, A> buildWalkerWithActions(
-    guardState : G,
+    machineContext : G,
     coroutineScope : CoroutineScope = StateMachineScopeFactory.newScope(),
     dispatcherConfig: DispatcherConfig<A> = DispatcherConfig(),
     builderFunction : WalkerBuilderScope<V, I, G, A>.() -> Unit
@@ -68,7 +68,7 @@ fun <V, I, G, A> buildWalkerWithActions(
     val walkerBuilderScope = WalkerBuilderScope(graphStateMachineBuilder)
     builderFunction(walkerBuilderScope)
 
-    graphStateMachineBuilder.transitionGuardState = guardState
+    graphStateMachineBuilder.machineContext = machineContext
 
     val gsm = graphStateMachineBuilder.buildForWalker()
 
@@ -81,21 +81,21 @@ fun <V, I, G, A> buildWalkerWithActions(
 }
 
 /**
- * Builds a graph-backed walker with a custom transition guard state and no per-action arguments.
+ * Builds a graph-backed walker with a custom machine context and no per-action arguments.
  *
  * A walker only supports forward movement and does not keep a history of visited states.
- * Use this overload when you want guards backed by shared state ([G]) but you do not need to pass
+ * Use this overload when you want hooks backed by machine context ([G]) but you do not need to pass
  * values with each action.
  *
  * Overload selection:
- * - Choose this overload if you need custom guard state ([G]) but not per-action arguments.
+ * - Choose this overload if you need machine context ([G]) but not per-action arguments.
  * - If you need per-action arguments as well, prefer [buildWalkerWithActions].
  * - If you need neither, prefer the simplest [buildWalker] overload.
  *
  * Example:
  * ```kotlin
- * val walker = buildGuardedWalker<MyVertex, String, Flags>(
- *     guardState = Flags()
+ * val walker = buildWalkerWithContext<MyVertex, String, Flags>(
+ *     machineContext = Flags()
  * ) {
  *     buildGraph(startAtVertex = MyVertex.Start) {
  *         // define vertices and edges
@@ -105,8 +105,8 @@ fun <V, I, G, A> buildWalkerWithActions(
  *
  * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param G The transition guard state shared across edges.
- * @param guardState The initial state for transition guards, shared across all edges.
+ * @param G The machine context shared across edges.
+ * @param machineContext The initial machine context, shared across all edges.
  * @param coroutineScope The coroutine scope used for dispatching actions. Defaults to [StateMachineScopeFactory.newScope].
  * @param dispatcherConfig Configuration for the dispatcher channel. Controls buffering and overflow behavior.
  * @param builderFunction The builder scope function for configuring the walker.
@@ -114,8 +114,8 @@ fun <V, I, G, A> buildWalkerWithActions(
  * @throws IllegalStateException If the walker is not configured correctly when attempting to build.
  */
 @GsmBuilderScope
-fun <V, I, G> buildGuardedWalker(
-    guardState : G,
+fun <V, I, G> buildWalkerWithContext(
+    machineContext : G,
     coroutineScope : CoroutineScope = StateMachineScopeFactory.newScope(),
     dispatcherConfig: DispatcherConfig<Nothing> = DispatcherConfig(),
     builderFunction : WalkerBuilderScope<V, I, G, Nothing>.() -> Unit
@@ -127,7 +127,7 @@ fun <V, I, G> buildGuardedWalker(
     val walkerBuilderScope = WalkerBuilderScope(graphStateMachineBuilder)
     builderFunction(walkerBuilderScope)
 
-    graphStateMachineBuilder.transitionGuardState = guardState
+    graphStateMachineBuilder.machineContext = machineContext
 
     val gsm = graphStateMachineBuilder.buildForWalker()
 
@@ -140,15 +140,15 @@ fun <V, I, G> buildGuardedWalker(
 }
 
 /**
- * Builds a walker without custom guard state and without per-action arguments (the simplest overload).
+ * Builds a walker without machine context and without per-action arguments (the simplest overload).
  *
  * A walker supports forward-only movement and does not keep a history of visited states. Use this when your
- * transitions depend solely on the graph structure. A no-op guard state is used internally and the action
+ * transitions depend solely on the graph structure. A no-op machine context is used internally and the action
  * argument type is [Nothing].
  *
  * Overload selection:
- * - Choose this overload if you need neither custom guard state nor per-action arguments.
- * - If you need guard state, prefer [buildGuardedWalker].
+ * - Choose this overload if you need neither machine context nor per-action arguments.
+ * - If you need machine context, prefer [buildWalkerWithContext].
  * - If you also need per-action arguments, prefer [buildWalkerWithActions].
  *
  * Example:
@@ -176,7 +176,7 @@ fun <V, I> buildWalker(
 ) : Walker<V, I, Nothing, Nothing> where V : IVertex<I> {
 
     val graphStateMachineBuilder = GraphStateMachineBuilder<V, I, Nothing, Nothing>()
-    graphStateMachineBuilder.transitionGuardState = null
+    graphStateMachineBuilder.machineContext = null
 
     val walkerBuilderScope = WalkerBuilderScope(graphStateMachineBuilder)
     builderFunction(walkerBuilderScope)
@@ -199,16 +199,16 @@ fun <V, I> buildWalker(
  * Unlike [TraverserBuilderScope], it does not expose methods for configuring the edge exploration strategy,
  * as walkers only support forward movement.
  *
- * Instances of this class are created by the [buildWalker], [buildGuardedWalker], and [buildWalkerWithActions]
+ * Instances of this class are created by the [buildWalker], [buildWalkerWithContext], and [buildWalkerWithActions]
  * functions and passed to the builder function provided to those functions.
  *
  * @param V The type of the vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of the vertex identifiers.
- * @param G The traversal guard state shared across edges. Must implement [MachineContext].
- * @param A The type of arguments that can be passed with actions to influence traversal decisions.
+ * @param G The machine context shared across edges. Must implement [MachineContext].
+ * @param A The type of arguments that can be passed with actions to influence transition decisions.
  *
  * @see buildWalker
- * @see buildGuardedWalker
+ * @see buildWalkerWithContext
  * @see buildWalkerWithActions
  * @see GraphStateMachineBuilder
  */
@@ -274,11 +274,11 @@ class WalkerBuilderScope<V, I, G, A> @PublishedApi internal constructor(
     }
 
     /**
-     * Sets the transition guard state for the entire walker.
-     * Can be ignored if not building a walker with transition guards; however, it must not be null if specified as a type parameter.
+     * Sets the machine context for the entire walker.
+     * Can be ignored if not building a walker with transition hooks; however, it must not be null if specified as a type parameter.
      */
-    fun setTraversalGuardState(guardState: G) {
-        graphStateMachineBuilder.transitionGuardState = guardState
+    fun setMachineContext(machineContext: G) {
+        graphStateMachineBuilder.machineContext = machineContext
     }
 
     /**

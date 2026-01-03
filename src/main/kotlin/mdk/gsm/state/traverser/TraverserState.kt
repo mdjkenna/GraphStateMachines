@@ -12,7 +12,7 @@ import mdk.gsm.state.TransitionState
  *
  * @param V The type of vertices (states) in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param G The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.MachineContext].
+ * @param G The type of machine context, which is shared across all transitions. Must implement [mdk.gsm.state.MachineContext].
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
  * @see TransitionState
@@ -28,7 +28,7 @@ interface TraverserState<V, I, G, A> where V : IVertex<I> {
     /**
      * Returns the history of vertices traversed by the traverser.
      *
-     * This method provides the sequence of vertices that the traverser has visited,
+     * This method provides the sequence of vertices that the traverser has entered,
      * in chronological order from the start vertex to the current vertex. This can be useful
      * for auditing, logging, or displaying a breadcrumb trail of the traverser's path.
      *

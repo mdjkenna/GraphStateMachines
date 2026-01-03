@@ -6,29 +6,29 @@ import io.kotest.matchers.shouldBe
 import mdk.gsm.scope.StateMachineScopeFactory
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.scenarios.GraphScenarios
-import mdk.test.utils.OutgoingTransitionTestGuardState
+import mdk.test.utils.OutgoingTransitionTestMachineContext
 
-class OutgoingTransitionHandlerSpec : BehaviorSpec({
-    given("A graph with vertices that use onBeforeExit handlers") {
+class BeforeExitHookSpec : BehaviorSpec({
+    given("A graph with vertices that use before exit hooks") {
         val ids = object {
             val START = "start"
             val MIDDLE = "middle"
             val END = "end"
         }
-        val guardState = OutgoingTransitionTestGuardState()
+        val machineContext = OutgoingTransitionTestMachineContext()
         val transitionAttempts = mutableListOf<String>()
         val publishedStates = mutableListOf<String>()
 
-        val walker = GraphScenarios.outgoingTransitionHandlerWalker(
-            guardState,
+        val walker = GraphScenarios.beforeExitHookWalker(
+            machineContext,
             StateMachineScopeFactory.newScope()
         ) { vertexId -> transitionAttempts.add(vertexId) }
 
         publishedStates.add(walker.current.value.vertex.id)
 
-        `when`("A NEXT action is received and the current vertex has an onBeforeExit handler that prevents traversal") {
-            // The START vertex has an onBeforeExit handler that prevents traversal when a condition is met
-            guardState.shouldPreventTransition = true
+        `when`("A NEXT action is received and the current vertex has a before exit hook that prevents traversal") {
+            // The START vertex has a before exit hook that prevents traversal when a condition is met
+            machineContext.shouldPreventTransition = true
 
             val result = walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
             publishedStates.add(result.vertex.id)
@@ -40,9 +40,9 @@ class OutgoingTransitionHandlerSpec : BehaviorSpec({
             }
         }
 
-        `when`("A NEXT action is received and the current vertex has an onBeforeExit handler that allows traversal") {
+        `when`("A NEXT action is received and the current vertex has a before exit hook that allows traversal") {
             // Now allow the traversal
-            guardState.shouldPreventTransition = false
+            machineContext.shouldPreventTransition = false
 
             val result = walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
             publishedStates.add(result.vertex.id)
@@ -54,13 +54,13 @@ class OutgoingTransitionHandlerSpec : BehaviorSpec({
             }
         }
 
-        `when`("Another NEXT action is received and the current vertex has no onBeforeExit handler") {
-            // The MIDDLE vertex has no onBeforeExit handler, so traversal should always occur
+        `when`("Another NEXT action is received and the current vertex has no before exit hook") {
+            // The MIDDLE vertex has no before exit hook, so traversal should always occur
             val result = walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
             publishedStates.add(result.vertex.id)
 
             then("The traversal occurs normally") {
-                transitionAttempts shouldContainExactly listOf(ids.START, ids.START)
+                transitionAttempts shouldContainExactly listOf(ids.START, ids.START, ids.MIDDLE)
                 publishedStates shouldContainExactly listOf(ids.START, ids.START, ids.MIDDLE, ids.END)
                 walker.current.value.vertex.id shouldBe ids.END
             }

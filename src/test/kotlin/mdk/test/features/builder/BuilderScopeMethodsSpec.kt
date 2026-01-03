@@ -162,9 +162,9 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         }
     }
     
-    Given("A graph with conditional edges using transition guards") {
+    Given("A graph with conditional edges using transition hooks") {
         
-        When("Multiple edges have mutually exclusive transition guards") {
+        When("Multiple edges have mutually exclusive transition hooks") {
             var allowPath1 = true
             val traverser = buildTraverser {
                 val start = TestVertex("start")
@@ -191,7 +191,7 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
                 }
             }
             
-            Then("Traversal selects edges based on guard evaluation") {
+            Then("Traversal selects edges based on hook evaluation") {
                 runBlocking {
                     traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
                     traverser.current.value.vertex.id shouldBe "path1"
@@ -253,7 +253,7 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         }
     }
     
-    Given("A graph with onBeforeEntry vertex lifecycle handlers") {
+    Given("A graph with before entry vertex lifecycle hooks") {
         
         When("Vertices are configured with onBeforeEntry callbacks") {
             val visitedVertices = mutableListOf<String>()
@@ -283,7 +283,7 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
                 }
             }
             
-            Then("The callbacks are invoked when entering each vertex") {
+            Then("The transition hooks are invoked when entering each vertex") {
                 runBlocking {
                     visitedVertices.size shouldBe 0
                     
@@ -297,9 +297,9 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         }
     }
     
-    Given("A graph with onBeforeExit vertex lifecycle handlers") {
+    Given("A graph with before exit vertex lifecycle hooks") {
         
-        When("Vertices are configured with onBeforeExit callbacks") {
+        When("Vertices are configured with before exit callbacks") {
             val transitionLog = mutableListOf<String>()
             val traverser = buildTraverser {
                 val v1 = TestVertex("1")
@@ -399,10 +399,10 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         }
     }
 
-    Given("A walker built using setTraversalGuardState") {
+    Given("A walker built using setMachineContext") {
 
-        When("The guard state is set explicitly via setTraversalGuardState") {
-            val guardState = object : MachineContext {
+        When("The machine context is set explicitly via setMachineContext") {
+            val machineContext = object : MachineContext {
                 var allowTransition = true
                 override fun onReset() {
                     allowTransition = true
@@ -412,14 +412,14 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
             val v1 = TestVertex("1")
             val v2 = TestVertex("2")
 
-            val walker = buildGuardedWalker(guardState) {
-                setTraversalGuardState(guardState)
+            val walker = buildWalkerWithContext(machineContext) {
+                setMachineContext(machineContext)
                 buildGraph(v1) {
                     addVertex(v1) {
                         addEdge {
                             setTo(v2)
                             onBeforeTransition {
-                                if (this.guardState == null) blockTransition()
+                                if (this.machineContext == null) blockTransition()
                             }
                         }
                     }
@@ -427,7 +427,7 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
                 }
             }
 
-            Then("The walker uses the guard state for transition decisions") {
+            Then("The walker uses the machine context for transition decisions") {
                 runBlocking {
                     walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
                     walker.current.value.vertex.id shouldBe "2"

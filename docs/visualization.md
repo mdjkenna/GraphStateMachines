@@ -35,7 +35,7 @@ val dotContent = DotGenerator.generateDotFromMachine(traverser) {
 }
 ```
 
-Decoration classes allow styling of vertices, edges, and transition guards. 
+Decoration classes allow styling of vertices, edges, and transition hooks. 
 For advanced customization, refer to DOT language documentation.
 
 ## Visualization

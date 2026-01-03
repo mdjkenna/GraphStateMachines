@@ -182,7 +182,7 @@ val washing = Vertex("Washing")
 val spinning = Vertex("Spinning")
 val loadRedistribution = Vertex("LoadRedistribution")
 
-data class WashingMachineGuardState(
+data class WashingMachineContext(
     @field:Volatile
     var isUnbalanced: Boolean = false
 ) : MachineContext {
@@ -199,8 +199,8 @@ data class WashingMachineGuardState(
     }
 }
 
-val walker = buildGuardedWalker<Vertex, String, WashingMachineGuardState>(
-    guardState = WashingMachineGuardState(
+        val walker = buildWalkerWithContext<Vertex, String, WashingMachineContext>(
+    machineContext = WashingMachineContext(
         isUnbalanced = false
     )
 ) {
@@ -227,7 +227,7 @@ val walker = buildGuardedWalker<Vertex, String, WashingMachineGuardState>(
             e {
                 setTo(loadRedistribution)
                 onBeforeTransition {
-                    guardState?.isUnbalanced == true
+                    if (machineContext?.isUnbalanced != true) blockTransition()
                 }
             }
 
@@ -240,7 +240,7 @@ val walker = buildGuardedWalker<Vertex, String, WashingMachineGuardState>(
             e {
                 setTo(spinning)
                 onBeforeTransition {
-                    if (guardState?.isUnbalanced != false) blockTransition()
+                    if (machineContext?.isUnbalanced != false) blockTransition()
                 }
             }
         }
@@ -288,9 +288,9 @@ val customizedDot = DotGenerator.generateDotFromMachine(walker) {
 
 -   **Configurable traversal through the graph model:** Different strategies for transitioning through the graph structure are available.
 -   **Supports transitioning to previous states:** Maintain full path history to enable bidirectional transitions through visited states.
--   **Cycles and conditional transitions through the graph are fully supported:** Graphs can contain cycles and transition guards can be used to dynamically control transitioning through cyclic paths.
+-   **Cycles and conditional transitions through the graph are fully supported:** Graphs can contain cycles and transition hooks can be used to dynamically control transitioning through cyclic paths.
 -   **Effects are supported within the state model itself:** Intermediate states allow side effects to be represented as explicit vertices within the graph.
--   **Action arguments can be dispatched to a state machine allowing for conditional transition decisions:** Actions support custom arguments accessible to transition guards and handlers for dynamic, context-aware transitions.
+-   **Action arguments can be dispatched to a state machine allowing for conditional transition decisions:** Actions support custom arguments accessible to transition hooks and entry/exit hooks for dynamic, context-aware transitions.
 -   **Predictable and atomic state transitions via a single-threaded actor model:** State machines process actions sequentially on a coroutine scope with a single-threaded dispatcher. Optionally bring your own scope to integrate the state machine with your own structured concurrency needs such as application lifecycle.
 
 ## Documentation

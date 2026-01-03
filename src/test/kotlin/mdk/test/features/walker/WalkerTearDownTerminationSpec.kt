@@ -8,12 +8,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.scenarios.GraphScenarios
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 
 class WalkerTearDownTerminationSpec : BehaviorSpec({
     Given("A walker that dispatches actions on a coroutine channel loop") {
-        val guardState = TestTransitionGuardState()
-        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
+        val machineContext = TestMachineContext()
+        val walker = GraphScenarios.linearThreeVertexWalker(machineContext)
 
         When("The walker is advanced once and then torn down") {
             runBlocking {

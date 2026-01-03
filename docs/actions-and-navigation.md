@@ -111,7 +111,7 @@ Arguments can be any type. The argument type is specified as a type parameter wh
 ```kotlin
 data class ActionArgs(val targetId: String, val payload: Any? = null)
 
-val traverser = buildTraverserWithActions<Vertex, String, GuardState, ActionArgs>(guardState) {
+val traverser = buildTraverserWithActions<Vertex, String, MachineContextFlags, ActionArgs>(machineContext) {
     buildGraph(startVertex) {
         // graph definition
     }
@@ -141,7 +141,7 @@ addVertex(vertexA) {
     addEdge {
         setTo(vertexB)
         onBeforeTransition {
-            args?.targetId == "target-b"
+            if (args?.targetId != "target-b") blockTransition()
         }
     }
 
@@ -151,7 +151,7 @@ addVertex(vertexA) {
 }
 ```
 
-If the transition guard function returns false that edge is skipped
+If `blockTransition()` is called within the transition hook, that edge is skipped.
 
 ### Arguments and Previous Actions
 

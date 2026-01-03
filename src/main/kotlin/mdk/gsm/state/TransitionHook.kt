@@ -18,7 +18,7 @@ import mdk.gsm.graph.IVertex
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of traversal guard state shared across the state machine. Must implement [MachineContext].
+ * @param G The type of machine context shared across the state machine. Must implement [MachineContext].
  * @param A The type of arguments that can be passed with actions to influence traversal decisions.
  *
  * @see mdk.gsm.graph.Edge
@@ -35,16 +35,16 @@ typealias TransitionHook<V, I, G, A> =
  * This scope is automatically created and passed to a [TransitionHook] function when the state machine
  * evaluates whether an edge can be traversed.
  *
- * This scope enables traversal guards to make decisions based on:
+ * This scope enables transition hooks to make decisions based on:
  * - Properties of the source vertex
- * - Shared state that may have been modified by previous traversals
+ * - Machine context that may have been modified by previous transitions
  * - Arguments provided with the current action
  *
  * To block a transition, call [blockTransition] within the hook. If `blockTransition()` is not called,
  * the transition is allowed by default.
  *
  * @property from The source vertex of the edge being evaluated. This is the vertex the edge is outgoing from.
- * @property guardState The shared traversal guard state for the entire state machine. This single instance
+ * @property machineContext The shared machine context for the entire state machine. This single instance
  *                     is shared across all edge evaluations, allowing for communication between edges and
  *                     persistence of state across transitions.
  * @property args Any arguments passed with the current action, typically from a [GraphStateMachineAction.NextArgs].
@@ -52,7 +52,7 @@ typealias TransitionHook<V, I, G, A> =
  *
  * @param V The type of vertices in the graph. Must implement [IVertex].
  * @param I The type of vertex identifiers.
- * @param G The type of traversal guard state. Must implement [MachineContext].
+ * @param G The type of machine context. Must implement [MachineContext].
  * @param A The type of arguments that can be passed with actions.
  *
  * @see TransitionHook
@@ -62,7 +62,7 @@ typealias TransitionHook<V, I, G, A> =
 @GsmBuilderScope
 class TransitionHookScope<V, I, G, A>(
     val from : V,
-    val guardState : G?,
+    val machineContext : G?,
     val args : A?,
 ) where V : IVertex<I> {
 

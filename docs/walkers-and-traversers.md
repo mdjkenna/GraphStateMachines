@@ -70,7 +70,7 @@ There are two scenarios where a vertex that has already been the current state c
 2. When arriving at a vertex from a `Previous` action (in traversers only)
 
 This means that cycles in the graph are potentially infinite loops by default,
-requiring transition guards to break out of cycles when needed.
+requiring transition hooks to break out of cycles when needed.
 
 ---
 
