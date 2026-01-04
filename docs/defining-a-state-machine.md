@@ -107,7 +107,7 @@ Custom vertex implementations with user-defined types for `I` can also be used.
 ## Adding outgoing edges
 
 Add edges to the graph as directed outgoing edges _from_ a vertex.
-Once the graph is built, edges have a fixed traversal order to ensure predictable and consistent edge visitation.
+Once the graph is built, edges have a fixed traversal order to ensure predictable and consistent edge entry.
 
 Edges can be defined to vertices before those vertices have been formally added to the graph builder. 
 This allows for flexibility in ordering definitions. However, all vertices must be added to the graph by the time the builder function completes to avoid an error.

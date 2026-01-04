@@ -11,11 +11,11 @@ The most efficient and practical choice between a `Traverser` or `Walker` depend
 ## Traversers
 
 Traversers implement standard depth-first search (DFS) which naturally includes backtracking,
-meaning they backtrack through ancestor vertices to find unvisited paths.
+meaning they backtrack through ancestor vertices to find unentered paths.
 When a traverser reaches a vertex with no valid outgoing edges, it will backtrack to find alternative paths.
 They also support moving to previous states.
 
-The history of visited states on Traversers can be accessed using the `tracePath()` method:
+The history of entered states on Traversers can be accessed using the `tracePath()` method:
 
 ```kotlin
 val path = traverser.tracePath()
@@ -26,7 +26,7 @@ This returns a list of vertices representing the traversal path, ordered from st
 ### Considerations if using a traverser
 
 Traversers maintain a history (breadcrumbs) to support their backtracking and bidirectional abilities.
-As a result, their memory usage is not constant and increases with the traversal depth.
+As a result, their memory usage is not constant and increases with the entry depth.
 This is only significant in specific scenarios.   
 Note that moving to previous vertices does the opposite - removing breadcrumbs from the current traversal path.
 
@@ -63,10 +63,10 @@ The memory usage difference between `Walkers` and `Traversers` is negligible in 
 **Note this is only applicable to traversers:**
 
 Each time a traverser arrives at a vertex, it re-evaluates outgoing edges from the beginning of their defined order. 
-It does not resume from where it left off on a previous visit. 
+It does not resume from where it left off on a previous entry. 
 
 There are two scenarios where a vertex that has already been the current state can become the current state again:
-1. When the state machine revisits a vertex as part of forward traversal (a cycle)
+1. When the state machine re-enters a vertex as part of forward traversal (a cycle)
 2. When arriving at a vertex from a `Previous` action (in traversers only)
 
 This means that cycles in the graph are potentially infinite loops by default,

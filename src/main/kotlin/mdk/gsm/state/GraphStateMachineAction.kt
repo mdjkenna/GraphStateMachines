@@ -16,7 +16,7 @@ sealed class GraphStateMachineAction<out A> {
     /**
      * Action to move to the next vertex in the graph with additional arguments of type [A].
      *
-     * The argument [A] is made available to any [TransitionHook] functions.
+     * The argument [A] is made available to any [BeforeTransitionHook] functions.
      * The argument forms part of the published state since it is stored in the resulting [TransitionState]
      * and accessible via [TransitionState.args]. For example, you might supply an identifier used to load
      * an entity from a database.

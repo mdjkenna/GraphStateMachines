@@ -20,7 +20,7 @@ addEdge {
 
 Calling `blockTransition()` within the transition hook function blocks exploration across its edge.
 If `blockTransition()` is not called, the transition is allowed by default.
-Transition hook functions have a `TransitionHookScope` receiver, which provides data to the implementer,
+Transition hook functions have a `BeforeTransitionScope` receiver, which provides data to the implementer,
 such as `machineContext` shown above. 
 
 Transition hooks can also access arguments passed with actions:
@@ -71,7 +71,7 @@ val traverser = buildTraverserWithContext(MachineContextFlags()) {
 ```
 
 The machine context is passed to the builder function and made available to all transition hooks.
-The `MachineContext` instance is made available to `TransitionHookScope` functions via their `TransitionHookScope` receiver.
+The `MachineContext` instance is made available to `BeforeTransitionScope` functions via their `BeforeTransitionScope` receiver.
 
 This shared state can be used to:
 - Store information that affects multiple transitions

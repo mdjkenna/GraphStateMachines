@@ -17,7 +17,7 @@ import mdk.gsm.state.MachineContext
  *
  * @param V The type of vertices stored in this graph. Must implement [IVertex].
  * @param I The type of the vertex ID. Must correspond to the type parameter of [IVertex] implemented by [V].
- * @param G The type of transition guard state used for edge transitions. Must implement [MachineContext].
+ * @param G The type of machine context used for edge transitions. Must implement [MachineContext].
  * @param A The type of action argument
  */
 class Graph<V, I, G, A> internal constructor(

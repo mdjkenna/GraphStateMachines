@@ -6,8 +6,8 @@ import mdk.gsm.builder.buildTraverserWithContext
 import mdk.gsm.dot.DotConfig
 import mdk.gsm.dot.DotDefaults
 import mdk.gsm.dot.DotGenerator
+import mdk.gsm.dot.decorations.BeforeTransitionHookDecoration
 import mdk.gsm.dot.decorations.EdgeDecoration
-import mdk.gsm.dot.decorations.TransitionHookDecoration
 import mdk.gsm.dot.decorations.VertexDecoration
 import mdk.gsm.graph.IVertex
 import mdk.gsm.state.MachineContext
@@ -82,7 +82,7 @@ class DotGeneratorSpec : BehaviorSpec({
                 decorateVertex("D", VertexDecoration(description = "End Node", fillColor = "red"))
                 decorateEdge("A", "B", EdgeDecoration(description = "Path 1", color = "green"))
                 decorateEdge("A", "C", EdgeDecoration(description = "Path 2", color = "orange"))
-                decorateTransitionHook("B", "D", TransitionHookDecoration(description = "Hook condition"))
+                decorateTransitionHook("B", "D", BeforeTransitionHookDecoration(description = "Hook condition"))
             }
 
             Then("The DOT content should contain all decorations") {

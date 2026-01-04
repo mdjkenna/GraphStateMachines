@@ -5,6 +5,6 @@ package mdk.gsm.dot.decorations
  *
  * @property description Description text to display for the transition hook
  */
-data class TransitionHookDecoration(
+data class BeforeTransitionHookDecoration(
     val description: String
 )

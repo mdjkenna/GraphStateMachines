@@ -12,10 +12,10 @@ When using a `Traverser` cycles are ignored by default but can be traversed by s
 There are two points to consider when designing a `Traverser` on a graph with cycles:
 
 - **Edge Index Reset**: When the traverser arrives at a vertex, it resets that vertex's edge index to zero.
-  Even if the `Traverser` previously left that vertex via edge 0, or edge 1 - ∞, it will attempt to traverse edge 0 again upon revisiting the vertex.
+  Even if the `Traverser` previously left that vertex via edge 0, or edge 1 - ∞, it will attempt to traverse edge 0 again upon re-entering the vertex.
 
 - **Infinite Loops**: As a result of the above point - cycles can create infinite loops. 
-  To avoid infinite loops through cycles, the user must coordinate cycle behavior using transition hooks to break cycles as needed. 
+  To avoid infinite loops through cycles, the user must coordinate cycle behaviour using before-transition hooks to break cycles as needed. 
   This offers full control without the library getting in the way of required behaviour, allowing state machines to loop through cycles as often as needed.
 
 Here's a simple example of using a transition hook to limit the number of times a cycle is taken:

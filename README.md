@@ -73,7 +73,8 @@ val D = Vertex("D")
 
 ### 2. State machine examples
 
-Traversers follow Depth First Search (DFS) which entails backtracking through ancestors to find subsequent vertices.
+Traversers implement standard depth-first search (DFS) which naturally includes backtracking,
+meaning they backtrack through ancestor vertices to find unentered paths.
 
 Walkers just perform a greedy transition through the next available edge i.e. a graph walk.
 
@@ -287,7 +288,7 @@ val customizedDot = DotGenerator.generateDotFromMachine(walker) {
 ## 4. Additional Features
 
 -   **Configurable traversal through the graph model:** Different strategies for transitioning through the graph structure are available.
--   **Supports transitioning to previous states:** Maintain full path history to enable bidirectional transitions through visited states.
+-   **- Supports transitioning to previous states: Maintain full path history to enable bidirectional transitions through entered states.
 -   **Cycles and conditional transitions through the graph are fully supported:** Graphs can contain cycles and transition hooks can be used to dynamically control transitioning through cyclic paths.
 -   **Effects are supported within the state model itself:** Intermediate states allow side effects to be represented as explicit vertices within the graph.
 -   **Action arguments can be dispatched to a state machine allowing for conditional transition decisions:** Actions support custom arguments accessible to transition hooks and entry/exit hooks for dynamic, context-aware transitions.

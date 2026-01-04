@@ -1,7 +1,7 @@
 package mdk.gsm.dot
 
+import mdk.gsm.dot.decorations.BeforeTransitionHookDecoration
 import mdk.gsm.dot.decorations.EdgeDecoration
-import mdk.gsm.dot.decorations.TransitionHookDecoration
 import mdk.gsm.dot.decorations.VertexDecoration
 import mdk.gsm.graph.Graph
 import mdk.gsm.graph.IVertex
@@ -23,7 +23,7 @@ class DotGenerator<V, I, G, A>(
 
     private val vertexDecorations = mutableMapOf<I, VertexDecoration>()
     private val edgeDecorations = mutableMapOf<Pair<I, I>, EdgeDecoration>()
-    private val hookDecorations = mutableMapOf<Pair<I, I>, TransitionHookDecoration>()
+    private val hookDecorations = mutableMapOf<Pair<I, I>, BeforeTransitionHookDecoration>()
 
     /**
      * Set decoration for a vertex.
@@ -54,7 +54,7 @@ class DotGenerator<V, I, G, A>(
      * @param toId The ID of the destination vertex
      * @param decoration The decoration to apply
      */
-    fun decorateTransitionHook(fromId: I, toId: I, decoration: TransitionHookDecoration) {
+    fun decorateTransitionHook(fromId: I, toId: I, decoration: BeforeTransitionHookDecoration) {
         hookDecorations[Pair(fromId, toId)] = decoration
     }
 

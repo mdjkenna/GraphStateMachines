@@ -28,7 +28,7 @@ The core benefit of this approach is that the *entire* behavior of the system is
 
 When a vertex is marked as an intermediate state:
 
-1. Just before a vertex `V1` is visited, its `onBeforeEntry` hook is executed, and the `autoAdvance` function is invoked within the `BeforeEntryScope`.
+1. Just before a vertex `V1` is entered, its `onBeforeEntry` hook is executed, and the `autoAdvance` function is invoked within the `BeforeEntryScope`.
 2. If using a traverser - the vertex is recorded in the traced path but never published as the current state (Walkers don't retain history).
 3. The state machine immediately advances to the next state and `V1` was never published, making it an intermediate state.
 
@@ -56,9 +56,9 @@ addVertex(loadingState) {
 }
 ```
 
-`onBeforeEntry` is called just before a vertex will be arrived at after a successful transition, but before that vertex is published as the current state.
+`onBeforeEntry` is called just before a vertex is entered after a successful transition, but before that vertex is published as the current state.
 In this example, the loading state is marked as intermediate by calling `autoAdvance()` - advancing to the next state before publishing `loadingState`. 
-As a result `loadingState` is never perceived by observers, it will immediately advance to the data loaded state once the operation completes.
+As a result `loadingState` is never entered by observers, it will immediately advance to the data loaded state once the operation completes.
 
 Intermediate states solve common problems in a more traditional state machine oriented fashion:
 

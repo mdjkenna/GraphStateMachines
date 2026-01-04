@@ -2,9 +2,9 @@ package mdk.gsm.state
 
 /**
  * Machine contexts are used to share state across transitions in order to persist flags and
- * data across all edge [TransitionHook] implementations in the graph state machine.
+ * data across all edge [BeforeTransitionHook] implementations in the graph state machine.
  *
- * This is set on the graph state machine and then the same instance is made available to all edge [TransitionHook] functions.
+ * This is set on the graph state machine and then the same instance is made available to all edge [BeforeTransitionHook] functions.
  * Use this to store transition decisions that depend on previous events or external state.
  *
  * e.g. If storing that a network call was not successful, and this should impact transition behaviour, store that result in an implementer of this interface.

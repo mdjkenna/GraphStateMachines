@@ -4,7 +4,7 @@ package mdk.gsm.builder
 
 import mdk.gsm.graph.Edge
 import mdk.gsm.graph.IVertex
-import mdk.gsm.state.TransitionHook
+import mdk.gsm.state.BeforeTransitionHook
 
 @GsmBuilderScope
 /**
@@ -50,15 +50,15 @@ class EdgeBuilderScope<V, I, G, A> internal constructor(
     }
 
     /**
-     * Sets the [TransitionHook] for this edge.
-     * @see TransitionHook
+     * Sets the [BeforeTransitionHook] for this edge.
+     * @see BeforeTransitionHook
      *
-     * @param transitionHook The function controlling traversal across this edge. Receives a
-     *   [mdk.gsm.state.TransitionHookScope]. Call [mdk.gsm.state.TransitionHookScope.blockTransition]
+     * @param beforeTransitionHook The function controlling traversal across this edge. Receives a
+     *   [mdk.gsm.state.BeforeTransitionScope]. Call [mdk.gsm.state.BeforeTransitionScope.blockTransition]
      *   to prevent the traversal; otherwise, the transition is allowed by default.
      */
-    fun onBeforeTransition(transitionHook : TransitionHook<V, I, G, A>) {
-        edgeBuilder.transitionHook = transitionHook
+    fun onBeforeTransition(beforeTransitionHook : BeforeTransitionHook<V, I, G, A>) {
+        edgeBuilder.beforeTransitionHook = beforeTransitionHook
     }
 }
 
@@ -67,7 +67,7 @@ internal class EdgeBuilder<V, I, G, A>(
 ) where V : IVertex<I> {
     var order = 0
     var to : I? = null
-    var transitionHook : TransitionHook<V, I, G, A>? = null
+    var beforeTransitionHook : BeforeTransitionHook<V, I, G, A>? = null
 
     fun build() : Edge<V, I, G, A> {
 
@@ -78,7 +78,7 @@ internal class EdgeBuilder<V, I, G, A>(
             order = order,
             from = from,
             to = localTo,
-            transitionHook = transitionHook
+            beforeTransitionHook = beforeTransitionHook
         )
     }
 }

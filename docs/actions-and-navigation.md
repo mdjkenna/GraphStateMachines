@@ -7,7 +7,8 @@ title: Actions and Navigation
 
 ## Basic Actions
 
-Actions are dispatched to a state machine and usually cause state transitions.
+Actions are dispatched to a state machine and usually cause state transitions. 
+The library uses Kotlin Coroutines and a general understanding of coroutines is needed to understand how actions can be processed differently.
 
 Traversers accept actions for: 
 
@@ -23,7 +24,7 @@ Walkers accept actions for:
 
 2. Resetting to start again as if just initialised - `Reset`
 
-Walkers do not accept `Previous` actions as they do not retain a history of visited states.
+Walkers do not accept `Previous` actions as they do not retain a history of entered states.
 
 Below are examples of dispatching actions for a `Traverser`. Walkers have identical options minus `Previous` actions.
 
@@ -47,11 +48,9 @@ scope.launch {
 ```
 
 ## Dispatch Suspension Behavior
-
-GraphStateMachines integrates directly with the Kotlin coroutines API. 
-Internally, actions are sent to a coroutines `Channel` and processed sequentially (actor-style) on the state machine's single-threaded scope.
-
-That means the suspension and throughput behavior of `dispatch` is the same as `Channel.send`. The state machine surfaces this through `DispatcherConfig`.
+Internally actions are sent to a coroutines `Channel` and processed sequentially (actor-style) on the state machine's single-threaded scope.
+That means the suspension and throughput behaviour of `dispatch` is the same as `Channel.send`.
+The state machine surfaces the internal channel's configuration via `DispatcherConfig`.
 
 For the detailed reference on channels, see the Kotlin coroutines documentation:
 
@@ -60,12 +59,14 @@ For the detailed reference on channels, see the Kotlin coroutines documentation:
 
 ### When `dispatch` Suspends
 
-`dispatch` suspends only until the action is accepted by the channel. It does not wait for the state machine to finish processing the action.
+`dispatch` suspends only until the action is accepted by the channel. 
+It does not wait for the state machine to finish processing the action.
 
-In practice, there are two distinct causes of suspension:
+In practice, there are typically two distinct causes of suspension:
 
 - **No buffering (`Channel.RENDEZVOUS`)**: every `dispatch` suspends until the state machine's event loop receives the action.
-- **Bounded buffering (`Channel.BUFFERED` or a positive capacity) with `BufferOverflow.SUSPEND`**: `dispatch` runs without suspension until the buffer fills, then suspends to apply backpressure.
+- **Bounded buffering (`Channel.BUFFERED` or a positive capacity) with `BufferOverflow.SUSPEND`**: `dispatch` runs without suspension until the buffer fills, 
+then suspends to apply backpressure.
 
 The default configuration (`Channel.BUFFERED` with `BufferOverflow.SUSPEND`) is based on the default values for coroutine channels.
 The use case and context need consideration to optimise these values. For example - `Channel.CONFLATED` will often be more appropriate depending on the context.
@@ -73,11 +74,8 @@ Referring to the Kotlin coroutines API is essential here.
 
 ### Customizing Channel Behavior
 
-The Kotlin Coroutines API is used to configure how actions are consumed for a state machine. 
-
-The properties used for building the coroutines `channel` used internally by the state machine are surfaced via the `DispatcherConfig` parameter.
-These properties are used to configure the behaviour of the state machine in a transparent manner.
-Below is an illustration of a different action consuming behaviour where all producers will suspend if the state machine is processing an action.
+Below is an illustration of a different action consuming behaviour where all producers will suspend if the state machine is processing an action. 
+Note the use of the `DispatcherConfig` parameter to configure how actions are consumed.
 
 ```kotlin
 
@@ -104,9 +102,11 @@ val traverser = buildTraverser(
 
 ## Actions with Arguments
 
-The `NextArgs` action allows you to pass contextual data along with a transition request. This enables dynamic transitions where the path through the graph depends on runtime values.
+The `NextArgs` action allows you to pass contextual data along with a transition request. 
+This enables dynamic transitions where the path through the graph depends on runtime values.
 
-Arguments can be any type. The argument type is specified as a type parameter when building:
+Arguments can be any type. 
+The argument type is specified as a type parameter when building - `A`:
 
 ```kotlin
 data class ActionArgs(val targetId: String, val payload: Any? = null)
@@ -132,16 +132,24 @@ The standard `GraphStateMachineAction.Next` can still be used when arguments are
 
 Arguments are accessible via the `args` property in several contexts:
 
-- **Transition hooks** (`TransitionHookScope.args`)
+- **Transition hooks** (`BeforeTransitionScope.args`)
 - **Before-entry hooks** (`BeforeEntryScope.args`)
+- **Before-exit hooks** (`BeforeExitScope.args`)
 - **Published state** (`TransitionState.args`)
+
+In the below example, an action argument is used in a condition within a before-transition hook. 
+If that condition evaluates to true then the exploration of the edge going from ``vertexA`` to ``vertexB`` will be blocked, 
+and the edge going to ``vertexC`` will be explored instead.
+It is an example of how action arguments can be used for a variety of purposes such as controlling conditional state transitions.
 
 ```kotlin
 addVertex(vertexA) {
     addEdge {
         setTo(vertexB)
         onBeforeTransition {
-            if (args?.targetId != "target-b") blockTransition()
+            if (args?.targetId != "target-b") {
+                blockTransition()
+            }
         }
     }
 
@@ -151,11 +159,9 @@ addVertex(vertexA) {
 }
 ```
 
-If `blockTransition()` is called within the transition hook, that edge is skipped.
-
 ### Arguments and Previous Actions
 
-When using a `Traverser`, arguments are stored with each visited state in the traversal history. 
+When using a `Traverser`, arguments are stored with each entered state in the traversal history. 
 Dispatching a `Previous` action returns the state with the arguments from the original forward transition to that vertex.
 
 ---
