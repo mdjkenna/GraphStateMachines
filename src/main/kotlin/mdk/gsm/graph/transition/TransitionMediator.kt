@@ -63,7 +63,7 @@ internal class TransitionMediator<V, I, G, A>(
 
             if (container.beforeExitHook != null) {
                 val beforeExitScope = BeforeExitScope(args, machineContext, container.vertex)
-                container.beforeExitHook?.invoke(beforeExitScope)
+                container.beforeExitHook.invoke(beforeExitScope)
 
                 if (beforeExitScope.noChange) {
                     return@returnTransitionState TransitionState(
