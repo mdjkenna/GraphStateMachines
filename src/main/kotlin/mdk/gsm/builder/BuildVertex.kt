@@ -7,6 +7,7 @@ import mdk.gsm.graph.IVertex
 import mdk.gsm.graph.VertexContainer
 import mdk.gsm.state.BeforeEntryHook
 import mdk.gsm.state.BeforeExitHook
+import mdk.gsm.state.OnEntryHook
 
 @GsmBuilderScope
 /**
@@ -112,6 +113,26 @@ class VertexBuilderScope<V, I, G, A> internal constructor(
     fun onBeforeExit(handler: BeforeExitHook<V, I, G, A>) {
         vertexContainerBuilder.beforeExitHook = handler
     }
+
+    /**
+     * Sets an [OnEntryHook] that runs after this vertex has been fully entered and published as the current state.
+     *
+     * Unlike [onBeforeEntry], this hook executes after the state transition is complete and the new state
+     * has been published to observers.
+     *
+     * Example:
+     * ```kotlin
+     * onEntry {
+     *     // state has been published, perform post-entry tasks
+     * }
+     * ```
+     *
+     * @see OnEntryHook
+     * @see mdk.gsm.state.OnEntryScope
+     */
+    fun onEntry(handler: OnEntryHook<V, I, G, A>) {
+        vertexContainerBuilder.onEntryHook = handler
+    }
 }
 
 internal class VertexBuilder<V, I, G, A>(
@@ -121,6 +142,7 @@ internal class VertexBuilder<V, I, G, A>(
     private val adjacent = HashMap<I, Edge<V, I, G, A>>()
     var beforeEntryHook: BeforeEntryHook<V, I, G, A>? = null
     var beforeExitHook: BeforeExitHook<V, I, G, A>? = null
+    var onEntryHook: OnEntryHook<V, I, G, A>? = null
 
     val numberOfEdges: Int
         get() = adjacent.size
@@ -138,7 +160,8 @@ internal class VertexBuilder<V, I, G, A>(
             vertex = stepInstance,
             adjacentOrdered = sortedEdges,
             beforeEntryHook = beforeEntryHook,
-            beforeExitHook = beforeExitHook
+            beforeExitHook = beforeExitHook,
+            onEntryHook = onEntryHook
         )
     }
 }

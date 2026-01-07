@@ -51,12 +51,18 @@ internal class GsmController<V, I, G, A> internal constructor(
 
     private suspend inline fun updateState(
         completableAction: CompletableAction<V, I, A>,
-        crossinline update : suspend () -> TransitionState<V, I, A>
+        crossinline update : suspend () -> TransitionStateResult<V, I, G, A>
     ) {
-        val newState = update()
+        val result = update()
+        val newState = result.transitionState
         stateOut.value = newState
 
         completableAction.deferred.complete(newState)
+
+        result.stateEntryListener?.onStateEntered(
+            machineContext = result.machineContext,
+            args = newState.args
+        )
     }
 }
 
