@@ -1,9 +1,9 @@
 package mdk.gsm.graph.transition.traverse
 
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 
 internal class TraversalPath<V, I, A>
-        where V : IVertex<I> {
+        where V : Vertex<I> {
 
     var pathHead: TraversalPathNode<V, A>
         private set
@@ -61,7 +61,7 @@ internal class TraversalPath<V, I, A>
     }
 }
 
-internal data class TraversalPathNode<V : IVertex<*>, out A>(
+internal data class TraversalPathNode<V : Vertex<*>, out A>(
     val vertex: V,
     val left: TraversalPathNode<V, A>? = null,
     val isIntermediate: Boolean = false,

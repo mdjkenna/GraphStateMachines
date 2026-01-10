@@ -18,6 +18,8 @@ The above enables controlled access and can be conducive to separation of concer
 - `TraverserState`/`WalkerState` provides read-only access to the current state via `current` StateFlow
 - `TraverserDispatcher`/`WalkerDispatcher` provides methods to dispatch actions that modify state
 
+This can be conducive to patterns that strictly separate the processing of user actions from application state such as Unidirectional Data Flow (UDF).
+
 ---
 
 [← Navigate Back](../index.md)

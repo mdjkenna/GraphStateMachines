@@ -7,31 +7,37 @@
 
 # GraphStateMachines
 
-This is a Kotlin library for creating state machines using directed graphs where all the possible transitions between states are defined explicitly as directed edges between vertices.
+Imperatively designed state machines can struggle with increasing complexity as their behaviour becomes more elaborate.
+This can result in fragility and scattered logic.
+They can quickly become difficult to design and maintain with conditional branching, loops, effects, and dynamic behaviour depending on runtime conditions.
 
-State transitions are defined declaratively through a domain specific language. 
-This structural foundation offers several advantages:
+`GraphStateMachines` is a Kotlin state machine library that addresses these challenges.
+It provides a convenient declarative domain specific language (DSL) for building state machines based explicitly on graph theory.
+The library allows users to design complex state machine behaviour that can be formally defined in code and visualised with a simple yet flexible API, 
+enabling state machines to scale with complexity using a highly composable framework.
+
+States are modelled as vertices. Transitions are modelled as explicit directed edges. Using this approach, a state machine is designed by constructing a graph of relationships between states.
+Being declaratively designed with an explicitly stated set of possible transitions - these state machines are easy to understand, test, maintain and visualise.
+
+The library uses coroutines to support asynchronous operations with a simple actor based approach 
+and suspend functions that allow state machines to easily coordinate tasks and effects with structured concurrency.
+
+Advantages summarised below:
 
 *   **Validation:** Invalid transitions are implicitly prevented by the absence of an edge in the graph.
-*   **Declarative State Modeling:** The Kotlin DSL avoids complex procedural code that can be difficult to maintain.
-*   **Visualization and Communication:** Generate DOT language representations of state machines to visualize and verify possible state transitions.
-*   **Flexibility:** The library's features offer flexible ways to structure state machines and customize their behavior.
-*   **Focus:** A focused implementation that does not add transitive dependencies to your project
+*   **Declarative State Modelling:** The Kotlin DSL avoids complex imperative constructs that can be difficult to maintain.
+*   **Visualization and Communication:** Generate DOT language representations of state machines to visualise and verify possible state transitions.
+*   **Flexibility:** The library's features offer flexible ways to structure state machines and customise their behaviour.
+*   **Focus:** A focused implementation that does not add transitive dependencies to your project (except for core coroutines).
 
-## Features at a Glance
-
--   **Configurable traversal through the graph model:** Different strategies for transitioning through the graph structure are available.
--   **Supports transitioning to previous states:** Maintain full path history to enable bidirectional transitions through visited states.
--   **Cycles and conditional transitions through the graph are fully supported:** Graphs can contain cycles and transition guards can be used to dynamically control transitioning through cyclic paths.
--   **Effects are supported within the state model itself:** Intermediate states allow side effects to be represented as explicit vertices within the graph.
--   **Action arguments can be dispatched to a state machine allowing for conditional transition decisions:** Actions support custom arguments accessible to transition guards and handlers for dynamic, context-aware transitions.
--   **Predictable and atomic state transitions via a single-threaded actor model:** State machines process actions sequentially on a coroutine scope with a single-threaded dispatcher. Optionally bring your own scope to integrate the state machine with your own structured concurrency needs such as application lifecycle.
-
-There are currently two types of state machine in the library: `Traverser` and `Walker`. Each transitions through the graph differently, with its own set of advantages.
+Two kinds of state machine can be constructed in the library: A `Traverser` and a `Walker`.
+They are described in detail in the documentation site along with their available features.
 
 ## Installation
 
-Add Maven Central and then add the package as a dependency. Replace `<version>` with the latest version.
+Add Maven Central and then add the package as a dependency. 
+
+Replace `<version>` with the latest version.
 
 ```kotlin
 repositories {
@@ -49,10 +55,16 @@ This section demonstrates the definition and usage of a graph state machine.
 
 ### 1. Defining States
 
-States are represented as vertices within the graph, implementing the `IVertex` interface.
+A state is an implementation of the `Vertex<I>` interface. 
+
+A state instance has an `id` property of type `I` which is unique within the graph. 
+
+They are added to a state machine in a DSL builder as vertices in a graph. 
+
+They are easy to implement:
 
 ```kotlin
-data class Vertex(override val id: String) : IVertex<String>
+data class Vertex(override val id: String) : Vertex<String>
 
 val A = Vertex("A")
 val B = Vertex("B")
@@ -60,149 +72,267 @@ val C = Vertex("C")
 val D = Vertex("D")
 ```
 
-### 2. Building Traversers
+### 2. State machine examples
 
-A `Traverser` maintains a history of visited vertices, enabling transitions both forward and backward through the graph.
+Traversers implement standard depth-first search (DFS) which naturally includes backtracking,
+meaning they backtrack through ancestor vertices to find unentered paths.
 
-Traversers implement Depth-First Search. When a vertex with no valid outgoing edges is reached, 
-the traverser backtracks through ancestor vertices to find unvisited paths.
+Walkers just perform a greedy transition through the next available edge i.e. a graph walk.
 
-In this example, the `Traverser` transitions from `A` to `B`, and subsequently to `D`.
+The difference is made clear in the example underneath.
+
+The graph in the example has a dead end at `B`. Both machines take `A -> B` first. 
+
+After that:
+- **Traverser:** Continues to `C` via backtracking.
+- **Walker:** does not backtrack and stays at `B`
 
 ```kotlin
-fun main() = runBlocking {
-    val traverser = buildTraverser {
-        buildGraph(A) {
-            addVertex(A) {
-                addEdge {
-                    setTo(B)
-                }
-
-                addEdge {
-                    setTo(C)
-                }
-            }
-
-            addVertex(B) {
-                addEdge {
-                    setTo(D)
-                }
-            }
-
-            addVertex(C) {
-                addEdge {
-                    setTo(D)
-                }
-            }
-
-            addVertex(D)
+val graph = buildPlainGraph {
+    addVertex(A) {
+        addEdge {
+            setTo(B)
+        }
+        
+        addEdge {
+            setTo(C)
         }
     }
+    
+    addVertex(B)
+    
+    addVertex(C) {
+        addEdge {
+            setTo(D)
+        }
+    }
+    
+    addVertex(D)
+}
 
-    val stateAfterFirst = traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
-    val finalState = traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
+val traverser = buildTraverser<Vertex, String> {
+    setWorkflowGraph(
+        startAtVertex = A,
+        graph = graph
+    )
+}
 
-    println("Traverser ended at: ${finalState.vertex.id}")
-    println("Traverser path: ${finalState.path.map { it.vertex.id }}")
+val walker = buildWalker<Vertex, String> {
+    setWorkflowGraph(
+        startAtVertex = A,
+        graph = graph
+    )
+}
+
+repeat(3) {
+    traverser.dispatch(GraphStateMachineAction.Next)
+}
+
+repeat(3) { 
+    walker.dispatch(GraphStateMachineAction.Next)
 }
 ```
 
-### 3. Building Walkers
+**Why does the traverser behave differently to the walker?**
 
-A `Walker` performs a graph walk, transitioning through the first available valid edge at each vertex without retaining history.
+The traverser uses Depth First Search (DFS). There are many resources online describing this type of graph traversal.
+The walker uses a greedy search, simply exploring the next available edge that it finds.
 
-When a walker reaches a vertex with no valid outgoing edges, it stops. This behavior differs from the traverser's backtracking approach and is suited to scenarios where forward-only progression is desired, such as indefinite cycles or straightforward sequential flows.
+**Why did the Walker stop ? Do these state machines just stop when they have nowhere else to go ?**
 
-The following example utilizes a `TransitionGuard` to conditionally determine the path.
+Yes they just stop. The graph above has a definite beginning and ending. 
+Graphs such as this are common with workflows for example, or any situation you prefer to model with a definite "finished" status.
+A traverser would stop at `D`.
+
+You can design graphs without a definite ending using cycles.
+The state machine can be designed to transition indefinitely through any number of cycles at your discretion.
+
+Referencing the documentation site or KDoc comments in the code will make this clearer.
+
+### 3. Graph Visualisation
+
+The state machines in the library can be visualised easily. 
+A `DotGenerator` utility is provided which converts a state machine into a plain string Dot representation, 
+a universal graph representation language that many tools understand. 
+
+Tools such as Graphviz can use this Dot string representation to output a PNG or SVG of the state machine's underlying graph. 
+There are options online that let you paste in the Dot string and generate a PNG or SVG image.
+
+State machine visualisation can serve multiple purposes:
+
+- **Documentation:** Generate accurate diagrams directly from executable code, eliminating the risk of documentation drift.
+- **Debugging:** Visualise the complete state structure to identify missing transitions, unreachable states, or unintended cycles.
+- **Communication:** Share visual representations with team members to verify design intent and discuss state flow behaviour.
+- **Verification:** Confirm that the implemented graph matches the intended design before deployment.
+
+Below is an example of state machine visualisation based on a simple model of a washing machine.
+
+The simplified model of a washing machine is: 
+- Initially it is idle
+- When it is activated it first needs to fill with water
+- After filling with water it washes contents with detergent
+- The detergent needs to then be rinsed off with rapid spinning
+- When it is finished it becomes idle again 
+- If an unbalanced load is detected during spin, the machine enters a redistribution loop before attempting to spin again.
+
+In the code snippet a `Walker` implements this washing machine model using the `v` and `e` DSL functions which are shorthand for `addVertex` and `addEdge`.
 
 ```kotlin
-data class GuardState(var isPathBUnlocked: Boolean = false) : ITransitionGuardState
+val idle = Vertex("Idle")
+val filling = Vertex("Filling")
+val washing = Vertex("Washing")
+val spinning = Vertex("Spinning")
+val loadRedistribution = Vertex("LoadRedistribution")
 
-fun main() = runBlocking {
-    val guardState = GuardState()
-
-    val walker = buildGuardedWalker(guardState) {
-        buildGraph(A) {
-            addVertex(A) {
-                addEdge {
-                    setTo(B)
-                    withGuard {
-                        isPathBUnlocked
-                    }
-                }
-
-                addEdge {
-                    setTo(C)
-                }
-            }
-
-            addVertex(B) {
-                addEdge {
-                    setTo(D)
-                }
-            }
-
-            addVertex(C) {
-                addEdge {
-                    setTo(D)
-                }
-            }
-
-            addVertex(D)
-        }
+data class WashingMachineContext(
+    @field:Volatile
+    var isUnbalanced: Boolean = false
+) : MachineContext {
+    override fun onReset() {
+        isUnbalanced = false
     }
 
-    val firstMove = walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
-    println("Walker took path: ${firstMove.vertex.id}")
+    fun onUnbalancedEvent() {
+        isUnbalanced = true
+    }
 
-    walker.dispatchAndAwaitResult(GraphStateMachineAction.Reset)
-    guardState.isPathBUnlocked = true
-
-    val secondMove = walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
-    println("Walker took path: ${secondMove.vertex.id}")
+    fun onBalancedEvent() {
+        isUnbalanced = false
+    }
 }
-```
 
-### 4. Graph Visualization
+val walker = buildWalkerWithContext<Vertex, String, WashingMachineContext>(
+    machineContext = WashingMachineContext(
+        isUnbalanced = false
+    )
+) {
+    buildGraph(idle) {
+        v(idle) {
+            e {
+                setTo(filling)
+            }
+        }
 
-The library provides a `DotGenerator` capable of exporting the state machine structure to the DOT language. 
-This representation can be rendered by tools such as Graphviz to produce visual diagrams.
+        v(filling) {
+            e {
+                setTo(washing)
+            }
+        }
 
-This capability ensures that the documentation of the state machine's logic remains synchronized with its implementation, providing a reliable reference for debugging and analysis. 
-With this approach naturally diagrams remain accurate as the state machine evolves.
+        v(washing) {
+            e {
+                setTo(spinning)
+            }
+        }
 
-#### Basic Export
+        v(spinning) {
+            e {
+                setTo(loadRedistribution)
+                onBeforeTransition {
+                    if (machineContext?.isUnbalanced != true) blockTransition()
+                }
+            }
 
-```kotlin
-val dotGraph = DotGenerator.generateDotFromMachine(traverser)
+            e {
+                setTo(idle)
+            }
+        }
+
+        v(loadRedistribution) {
+            e {
+                setTo(spinning)
+                onBeforeTransition {
+                    if (machineContext?.isUnbalanced != false) blockTransition()
+                }
+            }
+        }
+    }
+}
+
+val dotGraph = DotGenerator.generateDotFromMachine(walker)
 println(dotGraph)
 ```
 
-The resulting output is a DOT graph definition that can be visualized using Graphviz or online DOT viewers.
+Note you will have to imagine that something external is driving the state changes by dispatching actions, 
+this component is omitted for brevity but the topic of dispatching actions is discussed further in the documentation linked in this file.
 
-#### Customization
-
-The appearance of generated diagrams can be customized through configuration and decoration:
+The above example prints the Dot language representation of the `Walker`. 
+In addition, the appearance of generated diagrams can be customised through configuration and decoration. 
+The customisation in the below snippet is used in the rendered image.
 
 ```kotlin
-val customizedDot = DotGenerator.generateDotFromMachine(traverser) {
-    decorateVertex("A", VertexDecoration(fillColor = "green"))
-    decorateEdge("A", "B", EdgeDecoration(color = "blue"))
+val customizedDot = DotGenerator.generateDotFromMachine(walker) {
+    decorateEdge(
+        fromId = "Spinning",
+        toId = "LoadRedistribution",
+        decoration = EdgeDecoration(
+            description = "If unbalanced",
+            color = "#FF3B30",
+            fontColor = "#FF3B30"
+        )
+    )
+    
+    decorateEdge(
+        fromId = "LoadRedistribution",
+        toId = "Spinning",
+        decoration = EdgeDecoration(
+            description = "When rebalanced",
+            color = "#34C759",
+            fontColor = "#34C759"
+        )
+    )
 }
 ```
 
-Configuration options control layout direction, edge ordering display, and other visual properties. 
-Decorations allow for styling individual vertices and edges with custom descriptions and colors.
+<img src="./washing_machine_example.svg" alt="Example 8-vertex DAG" width="250">
 
-#### Use Cases
+## 4. Additional Features
 
-Graph visualization serves multiple purposes:
+#### Configurable traversal through the graph model
 
-- **Documentation:** Generate accurate diagrams directly from executable code, eliminating the risk of documentation drift.
-- **Debugging:** Visualize the complete state structure to identify missing transitions, unreachable states, or unintended cycles.
-- **Communication:** Share visual representations with team members to verify design intent and discuss state flow behavior.
-- **Verification:** Confirm that the implemented graph matches the intended design before deployment.
+Various configurations for transitioning through the graph structure are available to suit different use cases. 
+The libraries state machines can be optimised for finite workflows, ongoing processes or navigation hierarchies. 
+They can support any number cycles in the graph or be configured to ignore them.
+
+#### Supports transitioning to previous states and providing a state history
+
+`Traversers` maintain full path history to enable auditing of entered states. 
+They can also transition to previously visited states.
+
+#### Conditional transitions through the graph are fully supported 
+
+Edges can be configured for conditional exploration which equates to conditional transitions. 
+This allows for varied behaviour depending on runtime conditions. 
+
+#### Effects are supported with radical flexibility
+
+The state machines offer the option of inserting hooks at different points of an individual state transition, 
+which can be used to output effects.
+
+They can access scope specific data and functions to coordinate transitions,
+providing an additional layer of state machine control and intra-machine communication.
+
+Hooks provide a convenient approach to formally defining effects and when they can occur.
+
+The design draws from more traditional control-oriented state machine approaches. 
+``Intermediate States`` also enable the fine-grained and highly transparent coordination of effects by representing them as special states within the graph.
+
+#### Actions can be dispatched with user provided argument types
+
+Actions can have arguments sent with them to provide another layer of control over state machine behaviour such as conditional transitions.
+The arguments that were supplied with an action that produced a particular state are then published with that state, 
+which can simplify state machine design and interpretation.
+
+#### Predictable and atomic state transitions via a single-threaded actor model with configurability
+
+State machines process actions atomically on a coroutine scope with a single-threaded dispatcher and avoid interleaving action handling. 
+The single threaded nature of state handling is beneficial for simplicity and performance, 
+such as knowing all inserted hooks will always be invoked on the same thread.
+
+The state machines are backed by a channel which can be configured meaning that the queueing behaviour of actions are also configurable. 
+In all cases the library provides convenient defaults which can be overridden with user supplied options.
 
 ## Documentation
 
-For detailed guides and API documentation, visit the [Documentation Site](https://mdjkenna.github.io/GraphStateMachines/).
+For more detailed guides and API information, visit the [Documentation Site](https://mdjkenna.github.io/GraphStateMachines/).
+There are also detailed KDoc comments provided with the library code that most IDEs will be able to retrieve. 

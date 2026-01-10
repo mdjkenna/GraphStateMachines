@@ -5,13 +5,13 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.scenarios.GraphScenarios
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 
 class WalkerCapabilitiesSpec : BehaviorSpec({
     
     Given("A walker with Next and Reset capabilities only") {
-        val guardState = TestTransitionGuardState()
-        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
+        val machineContext = TestMachineContext()
+        val walker = GraphScenarios.linearThreeVertexWalker(machineContext)
         
         When("A Next action is dispatched") {
             runBlocking {
@@ -54,8 +54,8 @@ class WalkerCapabilitiesSpec : BehaviorSpec({
     }
     
     Given("A walker supporting reset functionality") {
-        val guardState = TestTransitionGuardState()
-        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
+        val machineContext = TestMachineContext()
+        val walker = GraphScenarios.linearThreeVertexWalker(machineContext)
         
         When("The walker advances through multiple states") {
             runBlocking {

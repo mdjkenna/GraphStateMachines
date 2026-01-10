@@ -8,8 +8,8 @@ import mdk.test.utils.Test15VertexTransitionArgs
 
 class WalkerCyclicPathNavigationSpec : BehaviorSpec({
     Given("A 15-vertex walker with multiple cyclic paths") {
-        val transitionGuardState = Test15VertexTransitionArgs()
-        val walker = GraphScenarios.complex15VertexWalker(transitionGuardState)
+        val machineContext = Test15VertexTransitionArgs()
+        val walker = GraphScenarios.complex15VertexWalker(machineContext)
 
         When("The walker has multiple NEXT actions dispatched that take it through a cyclic path which is unblocked") {
             // First cycle: 1 -> 2 -> 4 -> 6 -> 3 -> 2 (repeat)
@@ -52,8 +52,8 @@ class WalkerCyclicPathNavigationSpec : BehaviorSpec({
             }
         }
 
-        When("A traversal guard breaks the cycle's infinite loop") {
-            transitionGuardState.blockedFrom3To2 = true
+        When("A transition hook breaks the cycle's infinite loop") {
+            machineContext.blockedFrom3To2 = true
 
             // Continue from vertex 2 to vertex 4
             walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
@@ -99,8 +99,8 @@ class WalkerCyclicPathNavigationSpec : BehaviorSpec({
             }
         }
 
-        When("A traversal guard breaks the second cycle") {
-            transitionGuardState.blockedFrom8To9 = true
+        When("A transition hook breaks the second cycle") {
+            machineContext.blockedFrom8To9 = true
 
             // Try to move to vertex 9, but it's blocked, so move to vertex 10 instead
             val result = walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)

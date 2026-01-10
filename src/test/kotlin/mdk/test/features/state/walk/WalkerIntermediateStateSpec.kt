@@ -6,20 +6,20 @@ import io.kotest.matchers.shouldBe
 import mdk.gsm.scope.StateMachineScopeFactory
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.scenarios.GraphScenarios
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 
 class WalkerIntermediateStateSpec : BehaviorSpec({
 
     Given("A walker with intermediate states") {
         val ids = WalkerTestingIds
         val publishedStates = mutableListOf<String>()
-        val beforeVisitCalls = mutableListOf<String>()
-        val guardState = TestTransitionGuardState()
+        val beforeEntryCalls = mutableListOf<String>()
+        val machineContext = TestMachineContext()
         
         val walker = GraphScenarios.intermediateStateWalker(
-            guardState,
+            machineContext,
             StateMachineScopeFactory.newScope()
-        ) { vertexId -> beforeVisitCalls.add(vertexId) }
+        ) { vertexId -> beforeEntryCalls.add(vertexId) }
 
         publishedStates.add(walker.current.value.vertex.id)
 
@@ -48,10 +48,10 @@ class WalkerIntermediateStateSpec : BehaviorSpec({
 
             Then(
                 """
-                    'onBeforeVisit' has been called on the vertices which have been visited by progressing forwards using NEXT action.
+                    'onBeforeEntry' has been called on the vertices which have been entered by progressing forwards using NEXT action.
                     """.trimIndent()
             ) {
-                beforeVisitCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1)
+                beforeEntryCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1)
             }
         }
 
@@ -73,9 +73,9 @@ class WalkerIntermediateStateSpec : BehaviorSpec({
             }
 
             Then(
-                "'onBeforeVisit' has been called on all vertices that have been arrived at by a next action"
+                "'onBeforeEntry' has been called on all vertices that have been arrived at by a next action"
             ) {
-                beforeVisitCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1, ids.INTERMEDIATE_2, ids.REGULAR_2)
+                beforeEntryCalls shouldContainExactly listOf(ids.INTERMEDIATE_1, ids.REGULAR_1, ids.INTERMEDIATE_2, ids.REGULAR_2)
             }
         }
 

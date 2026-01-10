@@ -1,12 +1,24 @@
 package mdk.gsm.graph
 
-import mdk.gsm.state.BeforeVisitHandler
-import mdk.gsm.state.OutgoingTransitionHandler
+import mdk.gsm.state.*
 
 @PublishedApi
 internal class VertexContainer<V, I, G, A> internal constructor(
     val vertex: V,
     val adjacentOrdered: List<Edge<V, I, G, A>>,
-    val beforeVisitHandler: BeforeVisitHandler<V, I, G, A>?,
-    val outgoingTransitionHandler: OutgoingTransitionHandler<V, I, G, A>? = null
-) where V : IVertex<I>
+    val beforeEntryHook: BeforeEntryHook<V, I, G, A>?,
+    val beforeExitHook: BeforeExitHook<V, I, G, A>?,
+    val onEntryHook: OnEntryHook<V, I, G, A>?
+) : StateEntryListener<V, I, G, A> where V : Vertex<I> {
+
+    override suspend fun onStateEntered(machineContext: G?, args: A?) {
+        onEntryHook?.let { hook ->
+            val scope = OnEntryScope(
+                vertex = vertex,
+                machineContext = machineContext,
+                args = args
+            )
+            hook.invoke(scope)
+        }
+    }
+}

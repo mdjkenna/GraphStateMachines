@@ -6,26 +6,15 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import mdk.gsm.action.CompletableAction
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.GsmController
 import mdk.gsm.state.TransitionState
 
-/**
- * Implementation of the [WalkerDispatcher] interface.
- *
- * This class provides methods to dispatch forward-only actions to the walker.
- * Unlike [mdk.gsm.state.traverser.TraverserDispatcher], it only supports Next, NextArgs, and Reset actions.
- *
- * @param V The type of vertices (states) in the graph. Must implement [IVertex].
- * @param I The type of vertex identifiers used in the graph.
- * @param G The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
- * @param A The type of action arguments that can be passed when dispatching actions.
- */
 internal class WalkerDispatcherImplementation<V, I, G, A> private constructor(
     private val scope: CoroutineScope,
     private val actionChannel: Channel<CompletableAction<V, I, A>>
-) : WalkerDispatcher<V, I, G, A> where V : IVertex<I> {
+) : WalkerDispatcher<V, I, G, A> where V : Vertex<I> {
 
     override fun launchDispatch(action: GraphStateMachineAction.Next) {
         scope.launch {
@@ -94,7 +83,7 @@ internal class WalkerDispatcherImplementation<V, I, G, A> private constructor(
             gsm: GsmController<V, I, G, A>,
             singleThreadedScope: CoroutineScope,
             actionChannel: Channel<CompletableAction<V, I, A>> = Channel(Channel.UNLIMITED)
-        ): WalkerDispatcherImplementation<V, I, G, A> where V : IVertex<I> {
+        ): WalkerDispatcherImplementation<V, I, G, A> where V : Vertex<I> {
 
             val walkerDispatcherImplementation: WalkerDispatcherImplementation<V, I, G, A> = WalkerDispatcherImplementation(
                 singleThreadedScope,
@@ -103,7 +92,7 @@ internal class WalkerDispatcherImplementation<V, I, G, A> private constructor(
 
             singleThreadedScope.launch {
                 for (action in actionChannel) {
-                    walkerDispatcherImplementation.withAction() {
+                    walkerDispatcherImplementation.withAction {
                         gsm.dispatch(action)
                     }
                 }

@@ -1,6 +1,6 @@
 package mdk.gsm.state.traverser
 
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.state.GraphSupplier
 
 /**
@@ -16,9 +16,9 @@ import mdk.gsm.state.GraphSupplier
  * - [mdk.gsm.builder.buildTraverser]
  * - [mdk.gsm.builder.buildTraverserWithActions]
  *
- * @param V The type of vertices (states) in the graph. Must implement [IVertex].
+ * @param V The type of vertices (states) in the graph. Must implement [Vertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param G The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
+ * @param G The type of machine context, which is shared across all transitions. Must implement [mdk.gsm.state.MachineContext].
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
  * @see TraverserDispatcher For dispatching actions to the traverser
@@ -27,7 +27,7 @@ import mdk.gsm.state.GraphSupplier
  * @see mdk.gsm.builder.buildTraverserWithActions
  */
 interface Traverser<V, I, G, A> : TraverserDispatcher<V, I, G, A>, TraverserState<V, I, G, A>, GraphSupplier<V, I, G, A>
-        where V : IVertex<I>
+        where V : Vertex<I>
 {
     /**
      * Provides read-only access to the traverser's current state and traversal path.

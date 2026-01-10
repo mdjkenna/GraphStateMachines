@@ -2,10 +2,10 @@ package mdk.test.features.transition.traverse
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.datatest.withData
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 import mdk.gsm.state.traverser.Traverser
 import mdk.test.utils.AssertionUtils
 import mdk.test.utils.AssertionUtils.assertTracedPathWithCurrentState
@@ -18,7 +18,7 @@ import mdk.test.utils.TestBuilderUtils.v5
 import mdk.test.utils.TestBuilderUtils.v6
 import mdk.test.utils.TestBuilderUtils.v7
 import mdk.test.utils.TestBuilderUtils.v8
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 
 class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
 
@@ -235,23 +235,23 @@ class GraphBidirectionalTraversalEquivalenceSpec : BehaviorSpec({
     companion object {
         data class TestParameters(
             val title: String,
-            val traverser: Traverser<out IVertex<String>, String, out ITransitionGuardState, Nothing>,
+            val traverser: Traverser<out Vertex<String>, String, out MachineContext, Nothing>,
             val expectedForwardPath: List<String>
         )
 
         private fun createParam2(title: String, edgeTraversalType: EdgeTraversalType): TestParameters {
-            val traverser = TestBuilderUtils.build8VertexGraphStateMachine(TestTransitionGuardState(), edgeTraversalType)
+            val traverser = TestBuilderUtils.build8VertexGraphStateMachine(TestMachineContext(), edgeTraversalType)
 
             return TestParameters(
                 title,
                 traverser,
-                listOf(v1, v2, v4, v8, v3, v5, v7, v6).map(IVertex<String>::id)
+                listOf(v1, v2, v4, v8, v3, v5, v7, v6).map(Vertex<String>::id)
             )
         }
 
         private fun createParam1(title: String, edgeTraversalType: EdgeTraversalType): TestParameters {
             val traverser = mdk.test.scenarios.GraphScenarios.elevenVertexDAGTraverser(
-                TestTransitionGuardState(),
+                TestMachineContext(),
                 edgeTraversalType
             )
 

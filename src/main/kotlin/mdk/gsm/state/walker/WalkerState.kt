@@ -1,7 +1,7 @@
 package mdk.gsm.state.walker
 
 import kotlinx.coroutines.flow.StateFlow
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.state.TransitionState
 
 /**
@@ -11,7 +11,7 @@ import mdk.gsm.state.TransitionState
  * allowing clients to observe the walker without exposing a way of modifying it which is conducive to unidirectional data flow architectures.
  * Unlike [mdk.gsm.state.traverser.TraverserState], this interface does not provide access to traversal history as walkers do not maintain history.
  *
- * @param V The type of vertices (states) in the graph. Must implement [IVertex].
+ * @param V The type of vertices (states) in the graph. Must implement [Vertex].
  * @param I The type of vertex identifiers used in the graph.
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
@@ -19,7 +19,7 @@ import mdk.gsm.state.TransitionState
  * @see Walker
  * @see WalkerDispatcher
  */
-interface WalkerState<V, I, A> where V : IVertex<I> {
+interface WalkerState<V, I, A> where V : Vertex<I> {
     /**
      * A [StateFlow] that publishes the current state of the walker as a [TransitionState]
      */

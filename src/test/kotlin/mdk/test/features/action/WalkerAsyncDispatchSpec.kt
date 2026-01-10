@@ -5,13 +5,13 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.scenarios.GraphScenarios
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 
 class WalkerAsyncDispatchSpec : BehaviorSpec({
     
     Given("A four-vertex linear walker") {
-        val guardState = TestTransitionGuardState()
-        val walker = GraphScenarios.linearFourVertexTraverser(guardState)
+        val machineContext = TestMachineContext()
+        val walker = GraphScenarios.linearFourVertexTraverser(machineContext)
         
         When("A Next action is dispatched and awaited") {
             runBlocking {
@@ -57,8 +57,8 @@ class WalkerAsyncDispatchSpec : BehaviorSpec({
     }
     
     Given("A walker with conditional edges based on action arguments") {
-        val guardState = TestTransitionGuardState()
-        val walker = mdk.gsm.builder.buildWalkerWithActions<mdk.test.utils.TestVertex, String, TestTransitionGuardState, Int>(guardState) {
+        val machineContext = TestMachineContext()
+        val walker = mdk.gsm.builder.buildWalkerWithActions<mdk.test.utils.TestVertex, String, TestMachineContext, Int>(machineContext) {
             val v1 = mdk.test.utils.TestVertex("1")
             val v2 = mdk.test.utils.TestVertex("2")
             val v3 = mdk.test.utils.TestVertex("3")
@@ -68,11 +68,11 @@ class WalkerAsyncDispatchSpec : BehaviorSpec({
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard { args != null && args == 100 }
+                        onBeforeTransition { if (args == null || args != 100) blockTransition() }
                     }
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard { args != null && args == 200 }
+                        onBeforeTransition { if (args == null || args != 200) blockTransition() }
                     }
                 }
                 addVertex(v2) {
@@ -119,10 +119,10 @@ class WalkerAsyncDispatchSpec : BehaviorSpec({
     }
     
     Given("A walker supporting component destructuring") {
-        val guardState = TestTransitionGuardState()
+        val machineContext = TestMachineContext()
         val start = mdk.test.utils.TestVertex("start")
         val end = mdk.test.utils.TestVertex("end")
-        val walker = GraphScenarios.conditionalWithArgsWalker<Nothing>(guardState, { true }, start, end)
+        val walker = GraphScenarios.conditionalWithArgsWalker<Nothing>(machineContext, { true }, start, end)
         
         When("The walker is destructured using component operators") {
             val (state, dispatcher) = walker
@@ -160,8 +160,8 @@ class WalkerAsyncDispatchSpec : BehaviorSpec({
     }
     
     Given("A walker with teardown lifecycle management") {
-        val guardState = TestTransitionGuardState()
-        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
+        val machineContext = TestMachineContext()
+        val walker = GraphScenarios.linearThreeVertexWalker(machineContext)
         
         When("Actions are dispatched during normal operation") {
             runBlocking {

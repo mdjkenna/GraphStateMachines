@@ -2,26 +2,26 @@ package mdk.test.features.dotgen
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
-import mdk.gsm.builder.buildGuardedTraverser
+import mdk.gsm.builder.buildTraverserWithContext
 import mdk.gsm.dot.DotConfig
 import mdk.gsm.dot.DotDefaults
 import mdk.gsm.dot.DotGenerator
+import mdk.gsm.dot.decorations.BeforeTransitionHookDecoration
 import mdk.gsm.dot.decorations.EdgeDecoration
-import mdk.gsm.dot.decorations.TransitionGuardDecoration
 import mdk.gsm.dot.decorations.VertexDecoration
-import mdk.gsm.graph.IVertex
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.graph.Vertex
+import mdk.gsm.state.MachineContext
 
 class DotGeneratorSpec : BehaviorSpec({
 
     Given("A small directed graph for DOT generation") {
-        data class StringVertex(override val id: String) : IVertex<String>
+        data class StringVertex(override val id: String) : Vertex<String>
 
-        class SimpleGuardState : ITransitionGuardState {
+        class SimpleMachineContext : MachineContext {
             override fun onReset() {}
         }
 
-        val traverser = buildGuardedTraverser(SimpleGuardState()) {
+        val traverser = buildTraverserWithContext(SimpleMachineContext()) {
             buildGraph(StringVertex("A")) {
                 v(StringVertex("A")) {
                     addEdge {
@@ -82,7 +82,7 @@ class DotGeneratorSpec : BehaviorSpec({
                 decorateVertex("D", VertexDecoration(description = "End Node", fillColor = "red"))
                 decorateEdge("A", "B", EdgeDecoration(description = "Path 1", color = "green"))
                 decorateEdge("A", "C", EdgeDecoration(description = "Path 2", color = "orange"))
-                decorateTransitionGuard("B", "D", TransitionGuardDecoration(description = "Guard condition"))
+                decorateTransitionHook("B", "D", BeforeTransitionHookDecoration(description = "Hook condition"))
             }
 
             Then("The DOT content should contain all decorations") {
@@ -98,7 +98,7 @@ class DotGeneratorSpec : BehaviorSpec({
                 dotContent shouldContain "\"A\" -> \"B\" [label=\"[0]\\nPath 1\", color=\"green\", fontcolor=\"green\", penwidth=${DotDefaults.DEFAULT_EDGE_PEN_WIDTH}];"
                 dotContent shouldContain "\"A\" -> \"C\" [label=\"[1]\\nPath 2\", color=\"orange\", fontcolor=\"orange\", penwidth=${DotDefaults.DEFAULT_EDGE_PEN_WIDTH}];"
 
-                dotContent shouldContain "\"B\" -> \"D\" [label=\"[0]\", labeltooltip=\"Guard condition\", color=\"${DotDefaults.DEFAULT_EDGE_COLOR}\", fontcolor=\"${DotDefaults.DEFAULT_EDGE_COLOR}\", penwidth=${DotDefaults.DEFAULT_EDGE_PEN_WIDTH}];"
+                dotContent shouldContain "\"B\" -> \"D\" [label=\"[0]\", labeltooltip=\"Hook condition\", color=\"${DotDefaults.DEFAULT_EDGE_COLOR}\", fontcolor=\"${DotDefaults.DEFAULT_EDGE_COLOR}\", penwidth=${DotDefaults.DEFAULT_EDGE_PEN_WIDTH}];"
             }
         }
 

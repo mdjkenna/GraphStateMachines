@@ -3,7 +3,7 @@
 package mdk.gsm.builder
 
 import mdk.gsm.graph.Graph
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.graph.transition.TransitionFactory
 import mdk.gsm.graph.transition.TransitionMediator
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
@@ -12,11 +12,11 @@ import mdk.gsm.state.GsmController
 
 @PublishedApi
 internal class GraphStateMachineBuilder<V, I, G, A> @PublishedApi internal constructor()
-        where V : IVertex<I> {
+        where V : Vertex<I> {
 
     var graph : Graph<V, I, G, A>? = null
     var startVertex : V? = null
-    var transitionGuardState : G? = null
+    var machineContext : G? = null
     var traversalType : EdgeTraversalType = EdgeTraversalType.DFSAcyclic
     var explicitlyTransitionIntoBounds : Boolean = false
     var useStatelessWalk : Boolean = false
@@ -25,7 +25,7 @@ internal class GraphStateMachineBuilder<V, I, G, A> @PublishedApi internal const
     internal fun build(): GsmController<V, I, G, A> {
         val _graph = graph
         val _startVertex = startVertex
-        val _transitionGuardState = this@GraphStateMachineBuilder.transitionGuardState
+        val _machineContext = this@GraphStateMachineBuilder.machineContext
 
         check(_graph != null) {
             "The workflow graph must be defined."
@@ -51,7 +51,7 @@ internal class GraphStateMachineBuilder<V, I, G, A> @PublishedApi internal const
                     useStatelessWalk = useStatelessWalk,
                     traversalType = traversalType
                 ),
-                transitionGuardState = _transitionGuardState,
+                machineContext = _machineContext,
                 gsmConfig = GsmConfig(explicitlyTransitionIntoBounds)
             ),
             graph = _graph

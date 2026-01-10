@@ -4,19 +4,19 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import mdk.gsm.builder.buildGraphOnly
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.builder.buildGraph
+import mdk.gsm.state.MachineContext
 import mdk.test.utils.TestVertex
 
 class GraphMethodsSpec : BehaviorSpec({
     
-    Given("A graph built directly using buildGraphOnly for testing graph query methods") {
+    Given("A graph built directly using buildGraph for testing graph query methods") {
         val v1 = TestVertex("1")
         val v2 = TestVertex("2")
         val v3 = TestVertex("3")
         val v4 = TestVertex("4")
         
-        val graph = buildGraphOnly<TestVertex, String, ITransitionGuardState, Nothing> {
+        val graph = buildGraph<TestVertex, String, MachineContext, Nothing> {
             addVertex(v1) {
                 addEdge {
                     setTo(v2)
@@ -98,7 +98,7 @@ class GraphMethodsSpec : BehaviorSpec({
         val v2 = TestVertex("B")
         val v3 = TestVertex("C")
         
-        val graph1 = buildGraphOnly<TestVertex, String, ITransitionGuardState, Nothing> {
+        val graph1 = buildGraph<TestVertex, String, MachineContext, Nothing> {
             addVertex(v1) {
                 addEdge {
                     setTo(v2)
@@ -107,7 +107,7 @@ class GraphMethodsSpec : BehaviorSpec({
             addVertex(v2)
         }
         
-        val graph2 = buildGraphOnly<TestVertex, String, ITransitionGuardState, Nothing> {
+        val graph2 = buildGraph<TestVertex, String, MachineContext, Nothing> {
             addVertex(v2) {
                 addEdge {
                     setTo(v3)
@@ -156,18 +156,17 @@ class GraphMethodsSpec : BehaviorSpec({
         val pathB = TestVertex("pathB")
         val end = TestVertex("end")
         
-        val graph = buildGraphOnly<TestVertex, String, ITransitionGuardState, Nothing> {
+        val graph = buildGraph<TestVertex, String, MachineContext, Nothing> {
             addVertex(start) {
                 addEdge {
                     setTo(pathA)
-                    setEdgeTransitionGuard {
-                        true
+                    onBeforeTransition {
                     }
                 }
                 addEdge {
                     setTo(pathB)
-                    setEdgeTransitionGuard {
-                        false
+                    onBeforeTransition {
+                        blockTransition()
                     }
                 }
             }

@@ -3,6 +3,7 @@ package mdk.test.features.util
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import mdk.gsm.graph.Vertex
 import mdk.gsm.util.*
 
 class VertexUtilsSpec : BehaviorSpec({
@@ -16,8 +17,8 @@ class VertexUtilsSpec : BehaviorSpec({
                 vertex.id shouldBe 'A'
             }
             
-            Then("It should implement ICharVertex") {
-                vertex.shouldBeInstanceOf<ICharVertex>()
+            Then("It should implement Vertex<Char>") {
+                vertex.shouldBeInstanceOf<Vertex<Char>>()
             }
         }
         
@@ -38,8 +39,8 @@ class VertexUtilsSpec : BehaviorSpec({
                 vertex.id shouldBe 42.toByte()
             }
             
-            Then("It should implement IByteVertex") {
-                vertex.shouldBeInstanceOf<IByteVertex>()
+            Then("It should implement Vertex<Byte>") {
+                vertex.shouldBeInstanceOf<Vertex<Byte>>()
             }
         }
         
@@ -62,8 +63,8 @@ class VertexUtilsSpec : BehaviorSpec({
                 vertex.id shouldBe 1000.toShort()
             }
             
-            Then("It should implement IShortVertex") {
-                vertex.shouldBeInstanceOf<IShortVertex>()
+            Then("It should implement Vertex<Short>") {
+                vertex.shouldBeInstanceOf<Vertex<Short>>()
             }
         }
         
@@ -86,8 +87,8 @@ class VertexUtilsSpec : BehaviorSpec({
                 vertex.id shouldBe "test"
             }
             
-            Then("It should implement IStringVertex") {
-                vertex.shouldBeInstanceOf<IStringVertex>()
+            Then("It should implement Vertex<String>") {
+                vertex.shouldBeInstanceOf<Vertex<String>>()
             }
         }
         
@@ -98,8 +99,8 @@ class VertexUtilsSpec : BehaviorSpec({
                 vertex.id shouldBe 123
             }
             
-            Then("It should implement IIntVertex") {
-                vertex.shouldBeInstanceOf<IIntVertex>()
+            Then("It should implement Vertex<Int>") {
+                vertex.shouldBeInstanceOf<Vertex<Int>>()
             }
         }
         
@@ -110,8 +111,8 @@ class VertexUtilsSpec : BehaviorSpec({
                 vertex.id shouldBe 999L
             }
             
-            Then("It should implement ILongVertex") {
-                vertex.shouldBeInstanceOf<ILongVertex>()
+            Then("It should implement Vertex<Long>") {
+                vertex.shouldBeInstanceOf<Vertex<Long>>()
             }
         }
     }

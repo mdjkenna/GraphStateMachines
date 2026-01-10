@@ -10,15 +10,15 @@ import mdk.gsm.builder.DispatcherConfig
 import mdk.gsm.builder.buildTraverserWithActions
 import mdk.gsm.builder.buildWalkerWithActions
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 import mdk.test.utils.TestVertex
 
 class AtomicActionsSpec : BehaviorSpec(
     body = {
-        Given("A traverser with a buffered channel and delayed edge guards") {
+        Given("A traverser with a buffered channel and delayed edge hooks") {
             val receivedActions = ArrayList<Int>()
 
-            val traverser = buildTraverserWithActions<TestVertex, String, TestTransitionGuardState, Int>(guardState = TestTransitionGuardState()) {
+            val traverser = buildTraverserWithActions<TestVertex, String, TestMachineContext, Int>(machineContext = TestMachineContext()) {
                 val v1 = TestVertex("1")
                 val v2 = TestVertex("2")
                 val v3 = TestVertex("3")
@@ -28,13 +28,12 @@ class AtomicActionsSpec : BehaviorSpec(
                     addVertex(v1) {
                         addEdge {
                             setTo(v2)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
 
-                        onOutgoingTransition {
+                        onBeforeExit {
                             receivedActions.add(args ?: -1)
                         }
                     }
@@ -42,13 +41,12 @@ class AtomicActionsSpec : BehaviorSpec(
                     addVertex(v2) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
 
-                        onOutgoingTransition {
+                        onBeforeExit {
                             receivedActions.add(args ?: -1)
                         }
                     }
@@ -56,13 +54,12 @@ class AtomicActionsSpec : BehaviorSpec(
                     addVertex(v3) {
                         addEdge {
                             setTo(v5)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
 
-                        onOutgoingTransition {
+                        onBeforeExit {
                             receivedActions.add(args ?: -1)
                         }
                     }
@@ -93,8 +90,8 @@ class AtomicActionsSpec : BehaviorSpec(
             }
         }
 
-        Given("A traverser with delayed edge guards for awaited dispatch") {
-            val traverser = buildTraverserWithActions<TestVertex, String, TestTransitionGuardState, Int>(guardState = TestTransitionGuardState()) {
+        Given("A traverser with delayed edge hooks for awaited dispatch") {
+            val traverser = buildTraverserWithActions<TestVertex, String, TestMachineContext, Int>(machineContext = TestMachineContext()) {
                 val v1 = TestVertex("1")
                 val v2 = TestVertex("2")
                 val v3 = TestVertex("3")
@@ -104,27 +101,24 @@ class AtomicActionsSpec : BehaviorSpec(
                     addVertex(v1) {
                         addEdge {
                             setTo(v2)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
                     }
                     addVertex(v2) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
                     }
                     addVertex(v3) {
                         addEdge {
                             setTo(v5)
-                            setEdgeTransitionGuard {
+                            onBeforeTransition {
                                 delay(500)
-                                true
                             }
                         }
                     }
@@ -158,7 +152,7 @@ class AtomicActionsSpec : BehaviorSpec(
         Given("A walker configured with a conflated dispatcher channel") {
             val dispatcherConfig = DispatcherConfig<Int>(capacity = Channel.CONFLATED)
             val walker = buildWalkerWithActions(
-                guardState = TestTransitionGuardState(),
+                machineContext = TestMachineContext(),
                 dispatcherConfig = dispatcherConfig
             ) {
                 val v1 = TestVertex("1")
@@ -170,19 +164,19 @@ class AtomicActionsSpec : BehaviorSpec(
                     addVertex(v1) {
                         addEdge {
                             setTo(v2)
-                            setEdgeTransitionGuard { true }
+                            onBeforeTransition { }
                         }
                     }
                     addVertex(v2) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard { true }
+                            onBeforeTransition { }
                         }
                     }
                     addVertex(v3) {
                         addEdge {
                             setTo(v5)
-                            setEdgeTransitionGuard { true }
+                            onBeforeTransition { }
                         }
                     }
                     addVertex(v5)

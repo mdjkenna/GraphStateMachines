@@ -1,11 +1,11 @@
 package mdk.gsm.graph.transition
 
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.graph.VertexContainer
 import mdk.gsm.graph.transition.traverse.TraversalPathNode
 
-internal interface IForwardTransition<V, I, G, A> where V : IVertex<I> {
-    suspend fun moveNext(guardState : G?, autoAdvance: Boolean, args: A?): TraversalPathNode<V, A>?
+internal interface IForwardTransition<V, I, G, A> where V : Vertex<I> {
+    suspend fun moveNext(machineContext : G?, autoAdvance: Boolean, args: A?): TraversalPathNode<V, A>?
 
     fun currentStep(): V
 
@@ -14,7 +14,7 @@ internal interface IForwardTransition<V, I, G, A> where V : IVertex<I> {
     fun head(): TraversalPathNode<V, A>
 }
 
-internal interface IPreviousTransition<V, I, G, A> where V : IVertex<I> {
+internal interface IPreviousTransition<V, I, G, A> where V : Vertex<I> {
     suspend fun movePrevious(): TraversalPathNode<V, A>?
 }
 

@@ -1,7 +1,7 @@
 package mdk.gsm.graph.transition.walk
 
 import mdk.gsm.graph.Graph
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.graph.VertexContainer
 import mdk.gsm.graph.transition.IForwardTransition
 import mdk.gsm.graph.transition.IResettable
@@ -11,25 +11,22 @@ import mdk.gsm.graph.transition.traverse.TraversalPathNode
 internal class StatelessGraphWalk<V, I, G, A>(
     private val graph: Graph<V, I, G, A>,
     private val startVertex: V,
-) : IForwardTransition<V, I, G, A>, IResettable<V> where V : IVertex<I> {
+) : IForwardTransition<V, I, G, A>, IResettable<V> where V : Vertex<I> {
 
     private var currentVertex: V = startVertex
     private var currentPathNode: TraversalPathNode<V, A> = TraversalPathNode(vertex = startVertex)
 
-    /**
-     * Moves to the next vertex in the graph based on the traversal guards.
-     * Unlike traditional traversal, this implementation doesn't track visited nodes
-     * and simply follows the first valid edge it finds.
-     */
+
     override suspend fun moveNext(
-        guardState: G?,
+        machineContext: G?,
         autoAdvance: Boolean,
         args: A?
     ): TraversalPathNode<V, A>? {
-        val sortedEdges = graph.getOutgoingEdgesSorted(currentVertex).orEmpty()
+        val sortedEdges = graph.getOutgoingEdgesSorted(currentVertex)
+            .orEmpty()
 
         for (edge in sortedEdges) {
-            if (!edge.canProceed(guardState, args)) {
+            if (!edge.canProceed(machineContext, args)) {
                 continue
             }
 

@@ -1,7 +1,7 @@
 package mdk.gsm.state.traverser
 
 import kotlinx.coroutines.flow.StateFlow
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.state.TransitionState
 
 /**
@@ -10,16 +10,16 @@ import mdk.gsm.state.TransitionState
  * This interface provides read-only access to the traverser's current state and path history,
  * allowing clients to observe the traverser without exposing a way of modifying it which is conducive to unidirectional data flow architectures.
  *
- * @param V The type of vertices (states) in the graph. Must implement [IVertex].
+ * @param V The type of vertices (states) in the graph. Must implement [Vertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param G The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
+ * @param G The type of machine context, which is shared across all transitions. Must implement [mdk.gsm.state.MachineContext].
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
  * @see TransitionState
  * @see Traverser
  * @see TraverserDispatcher
  */
-interface TraverserState<V, I, G, A> where V : IVertex<I> {
+interface TraverserState<V, I, G, A> where V : Vertex<I> {
     /**
      * A [StateFlow] that publishes the current state of the traverser as a [TransitionState]
      */
@@ -28,7 +28,7 @@ interface TraverserState<V, I, G, A> where V : IVertex<I> {
     /**
      * Returns the history of vertices traversed by the traverser.
      *
-     * This method provides the sequence of vertices that the traverser has visited,
+     * This method provides the sequence of vertices that the traverser has entered,
      * in chronological order from the start vertex to the current vertex. This can be useful
      * for auditing, logging, or displaying a breadcrumb trail of the traverser's path.
      *

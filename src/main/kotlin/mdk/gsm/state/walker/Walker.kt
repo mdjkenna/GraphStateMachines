@@ -1,6 +1,6 @@
 package mdk.gsm.state.walker
 
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.GraphSupplier
 import mdk.gsm.state.TransitionState
@@ -14,14 +14,14 @@ import mdk.gsm.state.TransitionState
  * possible transitions between states. The walker can be walked by dispatching actions,
  * which cause transitions along the edges of the graph according to the defined transition rules.
  * Unlike a traverser, a walker only supports forward movement and does not maintain a history
- * of visited states.
+ * of entered states.
  *
  * This interface is typically obtained by using the builder function in [mdk.gsm.builder]:
  * - [mdk.gsm.builder.buildWalker]
  *
- * @param V The type of vertices (states) in the graph. Must implement [IVertex].
+ * @param V The type of vertices (states) in the graph. Must implement [Vertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param G The type of transition guard state, which controls conditional edge transitions. Must implement [mdk.gsm.state.ITransitionGuardState].
+ * @param G The type of machine context, which is shared across all transitions. Must implement [mdk.gsm.state.MachineContext].
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
  * @see WalkerDispatcher For dispatching actions to the walker
@@ -29,7 +29,7 @@ import mdk.gsm.state.TransitionState
  * @see mdk.gsm.builder.buildWalker
  */
 interface Walker<V, I, G, A> : WalkerState<V, I, A>, WalkerDispatcher<V, I, G, A>, GraphSupplier<V, I, G, A>
-        where V : IVertex<I>
+        where V : Vertex<I>
 {
     /**
      * Provides read-only access to the walker's current state.

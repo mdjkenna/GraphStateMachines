@@ -3,8 +3,8 @@
 package mdk.gsm.builder
 
 import mdk.gsm.graph.Edge
-import mdk.gsm.graph.IVertex
-import mdk.gsm.state.TransitionGuard
+import mdk.gsm.graph.Vertex
+import mdk.gsm.state.BeforeTransitionHook
 
 @GsmBuilderScope
 /**
@@ -15,13 +15,15 @@ import mdk.gsm.state.TransitionGuard
  * addEdge(autoOrder = false) {
  *     setOrder(5)
  *     setTo(MyVertex.Next)
- *     setEdgeTransitionGuard { /* return true to allow transition */ true }
+ *     onBeforeTransition {
+ *         if (shouldBlock) blockTransition()
+ *     }
  * }
  * ```
  */
 class EdgeBuilderScope<V, I, G, A> internal constructor(
     private val edgeBuilder: EdgeBuilder<V, I, G, A>
-) where V : IVertex<I> {
+) where V : Vertex<I> {
 
     /**
      * Sets the traversal order for this edge. Lower values are evaluated first.
@@ -48,23 +50,24 @@ class EdgeBuilderScope<V, I, G, A> internal constructor(
     }
 
     /**
-     * Sets the [TransitionGuard] for this edge.
-     * @see TransitionGuard
+     * Sets the [BeforeTransitionHook] for this edge.
+     * @see BeforeTransitionHook
      *
-     * @param transitionGuard The function controlling traversal across this edge. Receives a
-     *   [mdk.gsm.state.TransitionGuardScope] and returns `true` to allow the traversal, `false` to prevent it.
+     * @param beforeTransitionHook The function controlling traversal across this edge. Receives a
+     *   [mdk.gsm.state.BeforeTransitionScope]. Call [mdk.gsm.state.BeforeTransitionScope.blockTransition]
+     *   to prevent the traversal; otherwise, the transition is allowed by default.
      */
-    fun setEdgeTransitionGuard(transitionGuard : TransitionGuard<V, I, G, A>) {
-        edgeBuilder.transitionGuard = transitionGuard
+    fun onBeforeTransition(beforeTransitionHook : BeforeTransitionHook<V, I, G, A>) {
+        edgeBuilder.beforeTransitionHook = beforeTransitionHook
     }
 }
 
 internal class EdgeBuilder<V, I, G, A>(
     private val from : V
-) where V : IVertex<I> {
+) where V : Vertex<I> {
     var order = 0
     var to : I? = null
-    var transitionGuard : TransitionGuard<V, I, G, A>? = null
+    var beforeTransitionHook : BeforeTransitionHook<V, I, G, A>? = null
 
     fun build() : Edge<V, I, G, A> {
 
@@ -75,7 +78,7 @@ internal class EdgeBuilder<V, I, G, A>(
             order = order,
             from = from,
             to = localTo,
-            transitionGuard = transitionGuard
+            beforeTransitionHook = beforeTransitionHook
         )
     }
 }

@@ -3,7 +3,7 @@ package mdk.gsm.builder
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import mdk.gsm.action.CompletableAction
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.state.GraphStateMachineAction
 
 /**
@@ -38,7 +38,7 @@ data class DispatcherConfig<A>(
 
     companion object {
         internal fun <V, I, A> DispatcherConfig<A>.toChannel() : Channel<CompletableAction<V, I, A>>
-        where V : IVertex<I> {
+        where V : Vertex<I> {
             return Channel<CompletableAction<V, I, A>>(
                 capacity = capacity,
                 onBufferOverflow = onBufferOverflow,

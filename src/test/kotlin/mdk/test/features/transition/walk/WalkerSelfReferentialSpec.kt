@@ -2,34 +2,33 @@ package mdk.test.features.transition.walk
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import mdk.gsm.builder.buildGuardedWalker
+import mdk.gsm.builder.buildWalkerWithContext
 import mdk.gsm.scope.StateMachineScopeFactory
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 import mdk.gsm.util.StringVertex
 
 class WalkerSelfReferentialSpec : BehaviorSpec({
 
-    Given("A walker with a self-referential vertex limited to 7 cycles by guard state") {
+    Given("A walker with a self-referential vertex limited to 7 cycles by machine context") {
         var cycleCount = 0
-        val transitionGuardState = object : ITransitionGuardState {
+        val machineContext = object : MachineContext {
             override fun onReset() { cycleCount = 0 }
         }
 
         val v1 = StringVertex("1")
         val v2 = StringVertex("2")
 
-        val walker = buildGuardedWalker(transitionGuardState, StateMachineScopeFactory.newScope()) {
+        val walker = buildWalkerWithContext(machineContext, StateMachineScopeFactory.newScope()) {
             buildGraph(v1) {
                 addVertex(v1) {
                     addEdge {
                         setTo(v1)
-                        setEdgeTransitionGuard {
+                        onBeforeTransition {
                             if (cycleCount < 7) {
                                 cycleCount++
-                                true
                             } else {
-                                false
+                                blockTransition()
                             }
                         }
                     }
@@ -53,7 +52,7 @@ class WalkerSelfReferentialSpec : BehaviorSpec({
             }
         }
 
-        When("Advancing once more after reaching the cycle guard limit") {
+        When("Advancing once more after reaching the cycle hook limit") {
             walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
 
             Then("The walker should proceed to vertex '2' instead of continuing the cycle") {

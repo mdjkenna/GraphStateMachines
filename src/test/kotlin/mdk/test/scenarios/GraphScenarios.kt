@@ -1,13 +1,13 @@
 package mdk.test.scenarios
 
 import kotlinx.coroutines.CoroutineScope
-import mdk.gsm.builder.buildGuardedTraverser
-import mdk.gsm.builder.buildGuardedWalker
 import mdk.gsm.builder.buildTraverserWithActions
+import mdk.gsm.builder.buildTraverserWithContext
 import mdk.gsm.builder.buildWalkerWithActions
+import mdk.gsm.builder.buildWalkerWithContext
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.scope.StateMachineScopeFactory
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 import mdk.gsm.state.traverser.Traverser
 import mdk.gsm.state.walker.Walker
 import mdk.gsm.util.LongVertex
@@ -27,9 +27,9 @@ object GraphScenarios {
      * Useful for testing basic traversal and sequential navigation.
      */
     fun linearThreeVertexTraverser(
-        guardState: TestTransitionGuardState = TestTransitionGuardState()
-    ): Traverser<TestVertex, String, TestTransitionGuardState, Nothing> {
-        return buildGuardedTraverser(guardState) {
+        machineContext: TestMachineContext = TestMachineContext()
+    ): Traverser<TestVertex, String, TestMachineContext, Nothing> {
+        return buildTraverserWithContext(machineContext) {
             val v1 = TestVertex("1")
             val v2 = TestVertex("2")
             val v3 = TestVertex("3")
@@ -46,9 +46,9 @@ object GraphScenarios {
      * Creates a simple 3-vertex linear graph as a Walker: 1 -> 2 -> 3
      */
     fun linearThreeVertexWalker(
-        guardState: TestTransitionGuardState = TestTransitionGuardState()
-    ): Walker<TestVertex, String, TestTransitionGuardState, Nothing> {
-        return buildGuardedWalker(guardState) {
+        machineContext: TestMachineContext = TestMachineContext()
+    ): Walker<TestVertex, String, TestMachineContext, Nothing> {
+        return buildWalkerWithContext(machineContext) {
             val v1 = TestVertex("1")
             val v2 = TestVertex("2")
             val v3 = TestVertex("3")
@@ -65,9 +65,9 @@ object GraphScenarios {
      * Creates a 4-vertex linear graph: 1 -> 2 -> 3 -> 4
      */
     fun linearFourVertexTraverser(
-        guardState: TestTransitionGuardState = TestTransitionGuardState()
-    ): Traverser<TestVertex, String, TestTransitionGuardState, Nothing> {
-        return buildGuardedTraverser(guardState) {
+        machineContext: TestMachineContext = TestMachineContext()
+    ): Traverser<TestVertex, String, TestMachineContext, Nothing> {
+        return buildTraverserWithContext(machineContext) {
             val v1 = TestVertex("1")
             val v2 = TestVertex("2")
             val v3 = TestVertex("3")
@@ -83,22 +83,22 @@ object GraphScenarios {
     }
     
     /**
-     * Creates an 8-vertex graph with conditional paths controlled by guard state flags.
+     * Creates an 8-vertex graph with conditional paths controlled by machine context flags.
      * Topology:
      *     1 -> 2 -> 4 -> 8
      *     └─> 3 -> 5 -> 7 -> 8
      *          └─> 6 -> 7
      * 
-     * Guards can block transitions to vertices 2, 3, 5, and 7.
+     * Hooks can block transitions to vertices 2, 3, 5, and 7.
      * Vertex 5 is a SubTestVertex with additional test fields.
      * Optional 7->3 cycle can be enabled.
      */
     fun conditionalEightVertexTraverser(
-        guardState: TestTransitionGuardState,
+        machineContext: TestMachineContext,
         edgeTraversalType: EdgeTraversalType = EdgeTraversalType.DFSAcyclic,
         add7to3Cycle: Boolean = false
-    ): Traverser<TestVertex, String, TestTransitionGuardState, Nothing> {
-        return buildGuardedTraverser(guardState) {
+    ): Traverser<TestVertex, String, TestMachineContext, Nothing> {
+        return buildTraverserWithContext(machineContext) {
             setTraversalType(edgeTraversalType)
             
             val v1 = TestVertex("1")
@@ -114,11 +114,11 @@ object GraphScenarios {
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo2 }
+                        onBeforeTransition { if (machineContext.blockedGoingTo2) blockTransition() }
                     }
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo3 }
+                        onBeforeTransition { if (machineContext.blockedGoingTo3) blockTransition() }
                     }
                 }
 
@@ -129,7 +129,7 @@ object GraphScenarios {
                 addVertex(v3) {
                     addEdge {
                         setTo(v5)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo5 }
+                        onBeforeTransition { if (machineContext.blockedGoingTo5) blockTransition() }
                     }
                     addEdge { setTo(v6) }
                 }
@@ -141,10 +141,8 @@ object GraphScenarios {
                 addVertex(v5) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            !guardState.blockedGoingTo7 && 
-                            (from as SubTestVertex).testField &&
-                            v5.testField
+                        onBeforeTransition {
+                            if (machineContext.blockedGoingTo7 || !(from as SubTestVertex).testField || !v5.testField) blockTransition()
                         }
                     }
                 }
@@ -152,7 +150,7 @@ object GraphScenarios {
                 addVertex(v6) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo7 }
+                        onBeforeTransition { if (machineContext.blockedGoingTo7) blockTransition() }
                     }
                 }
 
@@ -161,7 +159,7 @@ object GraphScenarios {
                     if (add7to3Cycle) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard { !guardState.blockedGoingTo3 }
+                            onBeforeTransition { if (machineContext.blockedGoingTo3) blockTransition() }
                         }
                     }
                 }
@@ -170,15 +168,12 @@ object GraphScenarios {
             }
         }
     }
-    
-    /**
-     * Creates an 8-vertex walker with conditional paths (Walker version of conditionalEightVertexTraverser).
-     */
+
     fun conditionalEightVertexWalker(
-        guardState: TestTransitionGuardState,
+        machineContext: TestMachineContext,
         add7to3Cycle: Boolean = false
-    ): Walker<TestVertex, String, TestTransitionGuardState, Nothing> {
-        return buildGuardedWalker(guardState) {
+    ): Walker<TestVertex, String, TestMachineContext, Nothing> {
+        return buildWalkerWithContext(machineContext) {
             val v1 = TestVertex("1")
             val v2 = TestVertex("2")
             val v3 = TestVertex("3")
@@ -192,37 +187,31 @@ object GraphScenarios {
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo2 }
+                        onBeforeTransition { if (machineContext.blockedGoingTo2) blockTransition() }
                     }
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo3 }
+                        onBeforeTransition { if (machineContext.blockedGoingTo3) blockTransition() }
                     }
                 }
 
-                addVertex(v2) {
-                    addEdge { setTo(v4) }
-                }
+                addVertex(v2) { addEdge { setTo(v4) } }
 
                 addVertex(v3) {
                     addEdge {
                         setTo(v5)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo5 }
+                        onBeforeTransition { if (machineContext.blockedGoingTo5) blockTransition() }
                     }
                     addEdge { setTo(v6) }
                 }
 
-                addVertex(v4) {
-                    addEdge { setTo(v8) }
-                }
+                addVertex(v4) { addEdge { setTo(v8) } }
 
                 addVertex(v5) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            !guardState.blockedGoingTo7 && 
-                            (from as SubTestVertex).testField &&
-                            v5.testField
+                        onBeforeTransition {
+                            if (machineContext.blockedGoingTo7 || !(from as SubTestVertex).testField || !v5.testField) blockTransition()
                         }
                     }
                 }
@@ -230,7 +219,7 @@ object GraphScenarios {
                 addVertex(v6) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard { !guardState.blockedGoingTo7 }
+                        onBeforeTransition { if (machineContext.blockedGoingTo7) blockTransition() }
                     }
                 }
 
@@ -239,7 +228,7 @@ object GraphScenarios {
                     if (add7to3Cycle) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard { !guardState.blockedGoingTo3 }
+                            onBeforeTransition { if (machineContext.blockedGoingTo3) blockTransition() }
                         }
                     }
                 }
@@ -254,11 +243,11 @@ object GraphScenarios {
      * Used for testing complex traversal scenarios and DFS/BFS behavior.
      */
     fun complex15VertexTraverser(
-        guardState: Test15VertexTransitionArgs,
+        machineContext: Test15VertexTransitionArgs,
         edgeTraversalType: EdgeTraversalType = EdgeTraversalType.DFSAcyclic
     ): Traverser<TestVertex, String, Test15VertexTransitionArgs, Nothing> {
-        return buildGuardedTraverser(guardState) {
-            setTransitionGuardState(guardState)
+        return buildTraverserWithContext(machineContext) {
+            setMachineContext(machineContext)
             setTraversalType(edgeTraversalType)
 
             val v1 = TestVertex("1")
@@ -290,7 +279,7 @@ object GraphScenarios {
                 addVertex(v3) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard { !guardState.blockedFrom3To2 }
+                        onBeforeTransition { if (machineContext.blockedFrom3To2) blockTransition() }
                     }
                     addEdge { setTo(v7) }
                     addEdge { setTo(v5) }
@@ -316,7 +305,104 @@ object GraphScenarios {
                 addVertex(v8) {
                     addEdge {
                         setTo(v9)
-                        setEdgeTransitionGuard { !guardState.blockedFrom8To9 }
+                        onBeforeTransition { if (machineContext.blockedFrom8To9) blockTransition() }
+                    }
+                    addEdge { setTo(v10) }
+                }
+
+                addVertex(v9) {
+                    addEdge { setTo(v11) }
+                }
+
+                addVertex(v10) {
+                    addEdge { setTo(v11) }
+                }
+
+                addVertex(v11) {
+                    addEdge { setTo(v12) }
+                    addEdge { setTo(v13) }
+                }
+
+                addVertex(v12) {
+                    addEdge { setTo(v14) }
+                }
+
+                addVertex(v13) {
+                    addEdge { setTo(v14) }
+                }
+
+                addVertex(v14) {
+                    addEdge { setTo(v5) }
+                    addEdge { setTo(v15) }
+                }
+
+                addVertex(v15) {
+                    addEdge { setTo(v2) }
+                }
+            }
+        }
+    }
+
+    fun complex15VertexWalker(
+        machineContext: Test15VertexTransitionArgs
+    ): Walker<TestVertex, String, Test15VertexTransitionArgs, Nothing> {
+        return buildWalkerWithContext(machineContext) {
+            val v1 = TestVertex("1")
+            val v2 = TestVertex("2")
+            val v3 = TestVertex("3")
+            val v4 = TestVertex("4")
+            val v5 = TestVertex("5")
+            val v6 = TestVertex("6")
+            val v7 = TestVertex("7")
+            val v8 = TestVertex("8")
+            val v9 = TestVertex("9")
+            val v10 = TestVertex("10")
+            val v11 = TestVertex("11")
+            val v12 = TestVertex("12")
+            val v13 = TestVertex("13")
+            val v14 = TestVertex("14")
+            val v15 = TestVertex("15")
+
+            buildGraph(v1) {
+                addVertex(v1) {
+                    addEdge { setTo(v2) }
+                    addEdge { setTo(v3) }
+                }
+
+                addVertex(v2) {
+                    addEdge { setTo(v4) }
+                }
+
+                addVertex(v3) {
+                    addEdge {
+                        setTo(v2)
+                        onBeforeTransition { if (machineContext.blockedFrom3To2) blockTransition() }
+                    }
+                    addEdge { setTo(v7) }
+                    addEdge { setTo(v5) }
+                }
+
+                addVertex(v4) {
+                    addEdge { setTo(v6) }
+                }
+
+                addVertex(v5) {
+                    addEdge { setTo(v8) }
+                }
+
+                addVertex(v6) {
+                    addEdge { setTo(v3) }
+                    addEdge { setTo(v8) }
+                }
+
+                addVertex(v7) {
+                    addEdge { setTo(v8) }
+                }
+
+                addVertex(v8) {
+                    addEdge {
+                        setTo(v9)
+                        onBeforeTransition { if (machineContext.blockedFrom8To9) blockTransition() }
                     }
                     addEdge { setTo(v10) }
                 }
@@ -355,86 +441,17 @@ object GraphScenarios {
     }
     
     /**
-     * Creates a complex 15-vertex walker with multiple cycles and conditional paths.
-     * Walker version of complex15VertexTraverser.
-     */
-    fun complex15VertexWalker(
-        guardState: Test15VertexTransitionArgs
-    ): Walker<TestVertex, String, Test15VertexTransitionArgs, Nothing> {
-        return buildGuardedWalker(guardState) {
-            val v1 = TestVertex("1")
-            val v2 = TestVertex("2")
-            val v3 = TestVertex("3")
-            val v4 = TestVertex("4")
-            val v5 = TestVertex("5")
-            val v6 = TestVertex("6")
-            val v7 = TestVertex("7")
-            val v8 = TestVertex("8")
-            val v9 = TestVertex("9")
-            val v10 = TestVertex("10")
-            val v11 = TestVertex("11")
-            val v12 = TestVertex("12")
-            val v13 = TestVertex("13")
-            val v14 = TestVertex("14")
-            val v15 = TestVertex("15")
-
-            buildGraph(v1) {
-                addVertex(v1) {
-                    addEdge { setTo(v2) }
-                    addEdge { setTo(v3) }
-                }
-                addVertex(v2) { addEdge { setTo(v4) } }
-                addVertex(v3) {
-                    addEdge {
-                        setTo(v2)
-                        setEdgeTransitionGuard { !guardState.blockedFrom3To2 }
-                    }
-                    addEdge { setTo(v7) }
-                    addEdge { setTo(v5) }
-                }
-                addVertex(v4) { addEdge { setTo(v6) } }
-                addVertex(v5) { addEdge { setTo(v8) } }
-                addVertex(v6) {
-                    addEdge { setTo(v3) }
-                    addEdge { setTo(v8) }
-                }
-                addVertex(v7) { addEdge { setTo(v8) } }
-                addVertex(v8) {
-                    addEdge {
-                        setTo(v9)
-                        setEdgeTransitionGuard { !guardState.blockedFrom8To9 }
-                    }
-                    addEdge { setTo(v10) }
-                }
-                addVertex(v9) { addEdge { setTo(v11) } }
-                addVertex(v10) { addEdge { setTo(v11) } }
-                addVertex(v11) {
-                    addEdge { setTo(v12) }
-                    addEdge { setTo(v13) }
-                }
-                addVertex(v12) { addEdge { setTo(v14) } }
-                addVertex(v13) { addEdge { setTo(v14) } }
-                addVertex(v14) {
-                    addEdge { setTo(v5) }
-                    addEdge { setTo(v15) }
-                }
-                addVertex(v15) { addEdge { setTo(v2) } }
-            }
-        }
-    }
-    
-    /**
      * Creates a graph with intermediate states that auto-advance.
-     * Tests onBeforeVisit handlers and automatic state transitions.
+     * Tests before entry hooks and automatic state transitions.
      * 
      * Topology: start -> intermediate1 (auto) -> regular1 -> intermediate2 (auto) -> regular2 -> end (auto)
      */
     fun <G> intermediateAutoAdvanceTraverser(
-        guardState: G,
+        machineContext: G,
         scope: CoroutineScope = StateMachineScopeFactory.newScope(),
-        beforeVisitCalls: MutableList<String>
+        beforeEntryCalls: MutableList<String>
     ): Traverser<StringVertex, String, G, Nothing> {
-        return buildGuardedTraverser(guardState, scope) {
+        return buildTraverserWithContext(machineContext, scope) {
             val start = StringVertex("start")
             val intermediate1 = StringVertex("intermediate1")
             val regular1 = StringVertex("regular1")
@@ -448,187 +465,63 @@ object GraphScenarios {
                 }
 
                 addVertex(intermediate1) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         autoAdvance()
                     }
                     addEdge { setTo(regular1) }
                 }
 
                 addVertex(regular1) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                     }
                     addEdge { setTo(intermediate2) }
                 }
 
                 addVertex(intermediate2) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         autoAdvance()
                     }
                     addEdge { setTo(regular2) }
                 }
 
                 addVertex(regular2) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                     }
                     addEdge { setTo(end) }
                 }
 
                 addVertex(end) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         autoAdvance()
                     }
                 }
             }
         }
     }
-    
-    /**
-     * Creates a graph with a conditional intermediate state.
-     * The conditional vertex auto-advances only if the provided condition is true.
-     */
-    fun <G> conditionalAutoAdvanceTraverser(
-        guardState: G,
-        beforeVisitCalls: MutableList<String>,
-        shouldAutoAdvanceProvider: () -> Boolean
-    ): Traverser<StringVertex, String, G, Nothing> {
-        return buildGuardedTraverser(guardState) {
-            setTraversalType(EdgeTraversalType.DFSAcyclic)
 
-            val start = StringVertex("start")
-            val conditional = StringVertex("conditional")
-            val end = StringVertex("end")
-
-            buildGraph(start) {
-                addVertex(start) {
-                    addEdge { setTo(conditional) }
-                }
-
-                addVertex(conditional) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
-                        if (shouldAutoAdvanceProvider()) {
-                            autoAdvance()
-                        }
-                    }
-                    addEdge { setTo(end) }
-                }
-
-                addVertex(end) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
-                    }
-                }
-            }
-        }
-    }
-    
-    /**
-     * Creates a graph with a chain of intermediate states that all auto-advance.
-     * Topology: start -> intermediate1 (auto) -> intermediate2 (auto) -> intermediate3 (auto) -> end
-     */
-    fun <G> chainedIntermediateTraverser(
-        guardState: G,
-        beforeVisitCalls: MutableList<String>
-    ): Traverser<StringVertex, String, G, Nothing> {
-        return buildGuardedTraverser(guardState) {
-            setTraversalType(EdgeTraversalType.DFSAcyclic)
-
-            val start = StringVertex("start")
-            val intermediate1 = StringVertex("intermediate1")
-            val intermediate2 = StringVertex("intermediate2")
-            val intermediate3 = StringVertex("intermediate3")
-            val end = StringVertex("end")
-
-            buildGraph(start) {
-                addVertex(start) {
-                    addEdge { setTo(intermediate1) }
-                }
-
-                addVertex(intermediate1) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
-                        autoAdvance()
-                    }
-                    addEdge { setTo(intermediate2) }
-                }
-
-                addVertex(intermediate2) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
-                        autoAdvance()
-                    }
-                    addEdge { setTo(intermediate3) }
-                }
-
-                addVertex(intermediate3) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
-                        autoAdvance()
-                    }
-                    addEdge { setTo(end) }
-                }
-
-                addVertex(end) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
-                    }
-                }
-            }
-        }
-    }
-    
-    /**
-     * Creates a traverser with action arguments for testing NextArgs behavior.
-     * Conditional paths based on action arguments.
-     */
-    fun <A> conditionalWithArgsTraverser(
-        guardState: TestTransitionGuardState,
-        argMatcher: (A?) -> Boolean,
-        vararg vertices: TestVertex
-    ): Traverser<TestVertex, String, TestTransitionGuardState, A> {
-        require(vertices.size >= 2) { "Need at least 2 vertices" }
-        
-        return buildTraverserWithActions(guardState) {
-            buildGraph(vertices[0]) {
-                vertices.forEachIndexed { index, vertex ->
-                    if (index < vertices.size - 1) {
-                        addVertex(vertex) {
-                            addEdge {
-                                setTo(vertices[index + 1])
-                                setEdgeTransitionGuard { argMatcher(args) }
-                            }
-                        }
-                    } else {
-                        addVertex(vertex)
-                    }
-                }
-            }
-        }
-    }
-    
     /**
      * Creates a walker with action arguments for testing NextArgs behavior.
      */
     fun <A> conditionalWithArgsWalker(
-        guardState: TestTransitionGuardState,
+        machineContext: TestMachineContext,
         argMatcher: (A?) -> Boolean,
         vararg vertices: TestVertex
-    ): Walker<TestVertex, String, TestTransitionGuardState, A> {
+    ): Walker<TestVertex, String, TestMachineContext, A> {
         require(vertices.size >= 2) { "Need at least 2 vertices" }
         
-        return buildWalkerWithActions(guardState) {
+        return buildWalkerWithActions(machineContext) {
             buildGraph(vertices[0]) {
                 vertices.forEachIndexed { index, vertex ->
                     if (index < vertices.size - 1) {
                         addVertex(vertex) {
                             addEdge {
                                 setTo(vertices[index + 1])
-                                setEdgeTransitionGuard { argMatcher(args) }
+                                onBeforeTransition { if (!argMatcher(args)) blockTransition() }
                             }
                         }
                     } else {
@@ -651,11 +544,11 @@ object GraphScenarios {
      * - v4 -> v5
      */
     fun <A> nextActionWithArgsTraverser(
-        guardState: TestTransitionGuardState,
+        machineContext: TestMachineContext,
         argsGoTo3: A,
         argsGoTo4: A
-    ): Traverser<TestVertex, String, TestTransitionGuardState, A> {
-        return buildTraverserWithActions(guardState) {
+    ): Traverser<TestVertex, String, TestMachineContext, A> {
+        return buildTraverserWithActions(machineContext) {
             val v1 = TestVertex("1")
             val v2 = TestVertex("2")
             val v3 = TestVertex("3")
@@ -672,19 +565,19 @@ object GraphScenarios {
                 addVertex(v2) {
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard {
-                            args == argsGoTo3
+                        onBeforeTransition {
+                            if (args != argsGoTo3) blockTransition()
                         }
                     }
                     addEdge {
                         setTo(v4)
-                        setEdgeTransitionGuard {
-                            args == argsGoTo4
+                        onBeforeTransition {
+                            if (args != argsGoTo4) blockTransition()
                         }
                     }
                 }
                 addVertex(v4) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         if (args == argsGoTo4) {
                             autoAdvance()
                         }
@@ -705,11 +598,11 @@ object GraphScenarios {
      * Walker version of nextActionWithArgsTraverser.
      */
     fun <A> nextActionWithArgsWalker(
-        guardState: TestTransitionGuardState,
+        machineContext: TestMachineContext,
         argsGoTo3: A,
         argsGoTo4: A
-    ): Walker<TestVertex, String, TestTransitionGuardState, A> {
-        return buildWalkerWithActions(guardState) {
+    ): Walker<TestVertex, String, TestMachineContext, A> {
+        return buildWalkerWithActions(machineContext) {
             val v1 = TestVertex("1")
             val v2 = TestVertex("2")
             val v3 = TestVertex("3")
@@ -726,19 +619,19 @@ object GraphScenarios {
                 addVertex(v2) {
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard {
-                            args == argsGoTo3
+                        onBeforeTransition {
+                            if (args != argsGoTo3) blockTransition()
                         }
                     }
                     addEdge {
                         setTo(v4)
-                        setEdgeTransitionGuard {
-                            args == argsGoTo4
+                        onBeforeTransition {
+                            if (args != argsGoTo4) blockTransition()
                         }
                     }
                 }
                 addVertex(v4) {
-                    onBeforeVisit {
+                    onBeforeEntry {
                         if (args == argsGoTo4) {
                             autoAdvance()
                         }
@@ -756,14 +649,14 @@ object GraphScenarios {
 
     /**
      * Creates a walker for testing intermediate states with auto-advance functionality.
-     * Uses callbacks to track beforeVisit calls.
+     * Uses callbacks to track before entry calls.
      */
     fun intermediateStateWalker(
-        guardState: TestTransitionGuardState,
+        machineContext: TestMachineContext,
         scope: CoroutineScope,
-        beforeVisitCallback: (String) -> Unit
-    ): Walker<StringVertex, String, TestTransitionGuardState, Nothing> {
-        return buildGuardedWalker(guardState, scope) {
+        beforeEntryCallback: (String) -> Unit
+    ): Walker<StringVertex, String, TestMachineContext, Nothing> {
+        return buildWalkerWithContext(machineContext, scope) {
             val start = StringVertex("start")
             val intermediate1 = StringVertex("intermediate1")
             val regular1 = StringVertex("regular1")
@@ -776,34 +669,34 @@ object GraphScenarios {
                     addEdge { setTo(intermediate1) }
                 }
                 addVertex(intermediate1) {
-                    onBeforeVisit {
-                        beforeVisitCallback(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCallback(vertex.id)
                         autoAdvance()
                     }
                     addEdge { setTo(regular1) }
                 }
                 addVertex(regular1) {
-                    onBeforeVisit {
-                        beforeVisitCallback(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCallback(vertex.id)
                     }
                     addEdge { setTo(intermediate2) }
                 }
                 addVertex(intermediate2) {
-                    onBeforeVisit {
-                        beforeVisitCallback(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCallback(vertex.id)
                         autoAdvance()
                     }
                     addEdge { setTo(regular2) }
                 }
                 addVertex(regular2) {
-                    onBeforeVisit {
-                        beforeVisitCallback(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCallback(vertex.id)
                     }
                     addEdge { setTo(end) }
                 }
                 addVertex(end) {
-                    onBeforeVisit {
-                        beforeVisitCallback(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCallback(vertex.id)
                         autoAdvance()
                     }
                 }
@@ -815,9 +708,9 @@ object GraphScenarios {
      * Creates a 2-vertex traverser for testing transition bounds with explicit step into bounds.
      */
     fun twoVertexBoundsTraverser(
-        guardState: ITransitionGuardState? = null
-    ): Traverser<LongVertex, Long, ITransitionGuardState?, Nothing> {
-        return buildGuardedTraverser(guardState) {
+        machineContext: MachineContext? = null
+    ): Traverser<LongVertex, Long, MachineContext?, Nothing> {
+        return buildTraverserWithContext(machineContext) {
             val v1 = LongVertex(1L)
             val v2 = LongVertex(2L)
 
@@ -834,9 +727,9 @@ object GraphScenarios {
      * Creates a 2-vertex walker for testing traversal bounds with explicit step into bounds.
      */
     fun twoVertexBoundsWalker(
-        guardState: ITransitionGuardState? = null
-    ): Walker<LongVertex, Long, ITransitionGuardState?, Nothing> {
-        return buildGuardedWalker(guardState) {
+        machineContext: MachineContext? = null
+    ): Walker<LongVertex, Long, MachineContext?, Nothing> {
+        return buildWalkerWithContext(machineContext) {
             val v1 = LongVertex(1L)
             val v2 = LongVertex(2L)
 
@@ -865,10 +758,10 @@ object GraphScenarios {
      * 4B -> 6 -> 7
      */
     fun elevenVertexDAGTraverser(
-        guardState: TestTransitionGuardState,
+        machineContext: TestMachineContext,
         edgeTraversalType: EdgeTraversalType
-    ): Traverser<StringVertex, String, TestTransitionGuardState, Nothing> {
-        return buildGuardedTraverser(guardState) {
+    ): Traverser<StringVertex, String, TestMachineContext, Nothing> {
+        return buildTraverserWithContext(machineContext) {
             val step1 = StringVertex("1")
             setTraversalType(edgeTraversalType)
 
@@ -932,33 +825,75 @@ object GraphScenarios {
     }
 
     /**
-     * Creates a walker for testing outgoing transition handlers with noTransition().
+     * Creates a walker for testing before exit hooks with noTransition().
      * Uses callbacks to track transition attempts.
      */
-    fun outgoingTransitionHandlerWalker(
-        guardState: OutgoingTransitionTestGuardState,
+    fun beforeExitHookWalker(
+        machineContext: OutgoingTransitionTestMachineContext,
         scope: CoroutineScope,
         transitionAttemptCallback: (String) -> Unit
-    ): Walker<StringVertex, String, OutgoingTransitionTestGuardState, Nothing> {
-        return buildGuardedWalker(guardState, scope) {
+    ): Walker<StringVertex, String, OutgoingTransitionTestMachineContext, Nothing> {
+        return buildWalkerWithContext(machineContext, scope) {
             val start = StringVertex("start")
             val middle = StringVertex("middle")
             val end = StringVertex("end")
 
             buildGraph(start) {
                 addVertex(start) {
-                    onOutgoingTransition {
+                    onBeforeExit {
                         transitionAttemptCallback(vertex.id)
-                        if (guardState.shouldPreventTransition) {
+                        if (machineContext?.shouldPreventTransition == true) {
                             noTransition()
                         }
                     }
                     addEdge { setTo(middle) }
                 }
                 addVertex(middle) {
+                    onBeforeExit {
+                        transitionAttemptCallback(vertex.id)
+                    }
                     addEdge { setTo(end) }
                 }
                 addVertex(end)
+            }
+        }
+    }
+
+    fun onEntryHookWalker(
+        machineContext: TestMachineContext,
+        scope: CoroutineScope,
+        onEntryCallback: (String) -> Unit
+    ): Walker<StringVertex, String, TestMachineContext, Nothing> {
+        return buildWalkerWithContext(machineContext, scope) {
+            val start = StringVertex("start")
+            val middle = StringVertex("middle")
+            val end = StringVertex("end")
+
+            buildGraph(start) {
+                addVertex(start) {
+                    onEntry {
+                        onEntryCallback(vertex.id)
+                    }
+
+                    addEdge {
+                        setTo(middle)
+                    }
+                }
+
+                addVertex(middle) {
+                    onEntry {
+                        onEntryCallback(vertex.id)
+                    }
+
+                    addEdge {
+                        setTo(end)
+                    }
+                }
+                addVertex(end) {
+                    onEntry {
+                        onEntryCallback(vertex.id)
+                    }
+                }
             }
         }
     }

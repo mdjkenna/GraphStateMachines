@@ -2,18 +2,18 @@ package mdk.test.features.transition.traverse
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import mdk.gsm.builder.buildGuardedTraverser
+import mdk.gsm.builder.buildTraverserWithContext
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.util.StringVertex
 import mdk.test.utils.AssertionUtils.assertTracedPathWithCurrentState
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 
 class CyclicDfsIntermediateStateSpec : BehaviorSpec({
 
     Given("A cyclic DFS traverser with intermediate auto-advancing states") {
-        val beforeVisitCalls = mutableListOf<String>()
-        val guardState = TestTransitionGuardState()
+        val beforeEntryCalls = mutableListOf<String>()
+        val machineContext = TestMachineContext()
 
         val start = StringVertex("start")
         val intermediate1 = StringVertex("intermediate1")
@@ -22,7 +22,7 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
         val regular2 = StringVertex("regular2")
         val end = StringVertex("end")
 
-        val traverser = buildGuardedTraverser(guardState) {
+        val traverser = buildTraverserWithContext(machineContext) {
             setTraversalType(EdgeTraversalType.DFSCyclic)
 
             buildGraph(start) {
@@ -32,8 +32,8 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
                     }
                 }
                 addVertex(intermediate1) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         autoAdvance()
                     }
                     addEdge {
@@ -41,16 +41,16 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
                     }
                 }
                 addVertex(regular1) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                     }
                     addEdge {
                         setTo(intermediate2)
                     }
                 }
                 addVertex(intermediate2) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         autoAdvance()
                     }
                     addEdge {
@@ -58,16 +58,16 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
                     }
                 }
                 addVertex(regular2) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                     }
                     addEdge {
                         setTo(end)
                     }
                 }
                 addVertex(end) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                     }
                 }
             }
@@ -78,7 +78,7 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
 
             Then("The intermediate state is skipped and the regular state is published") {
                 result.vertex.id shouldBe "regular1"
-                beforeVisitCalls shouldBe listOf("intermediate1", "regular1")
+                beforeEntryCalls shouldBe listOf("intermediate1", "regular1")
             }
 
             Then("The traced path includes the intermediate state") {
@@ -122,12 +122,12 @@ class CyclicDfsIntermediateStateSpec : BehaviorSpec({
     }
 
     Given("A cyclic DFS traverser with explicit transition into bounds enabled") {
-        val guardState = TestTransitionGuardState()
+        val machineContext = TestMachineContext()
 
         val v1 = StringVertex("1")
         val v2 = StringVertex("2")
 
-        val traverser = buildGuardedTraverser(guardState) {
+        val traverser = buildTraverserWithContext(machineContext) {
             setTraversalType(EdgeTraversalType.DFSCyclic)
             setExplicitTransitionIntoBounds(true)
 

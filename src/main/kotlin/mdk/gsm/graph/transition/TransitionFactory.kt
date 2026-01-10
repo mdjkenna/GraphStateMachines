@@ -1,7 +1,7 @@
 package mdk.gsm.graph.transition
 
 import mdk.gsm.graph.Graph
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.graph.transition.traverse.AcyclicDfsTraversal
 import mdk.gsm.graph.transition.traverse.CyclicDfsGraphTraversal
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
@@ -13,7 +13,7 @@ internal object TransitionFactory {
         startVertex: V,
         useStatelessWalk: Boolean,
         traversalType: EdgeTraversalType = EdgeTraversalType.DFSAcyclic
-    ): TransitionCapabilities<V, I, G, A> where V : IVertex<I> {
+    ): TransitionCapabilities<V, I, G, A> where V : Vertex<I> {
         return if (useStatelessWalk) {
             val engine = StatelessGraphWalk<V, I, G, A>(graph, startVertex)
             TransitionCapabilities(

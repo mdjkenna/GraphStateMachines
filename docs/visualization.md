@@ -35,7 +35,7 @@ val dotContent = DotGenerator.generateDotFromMachine(traverser) {
 }
 ```
 
-Decoration classes allow styling of vertices, edges, and transition guards. 
+Decoration classes allow styling of vertices, edges, and transition hooks. 
 For advanced customization, refer to DOT language documentation.
 
 ## Visualization
@@ -47,7 +47,8 @@ Once generated, the state machine can be visualized using:
 - Python or Kotlin notebooks with appropriate libraries
 - Terminal tools
 
-This visualization helps in understanding, documenting, communicating and debugging state machines by providing a clear representation of application state flow.
+This visualisation helps in understanding, documenting, 
+communicating and debugging state machines by providing a clear representation of states and transitions.
 
 ---
 

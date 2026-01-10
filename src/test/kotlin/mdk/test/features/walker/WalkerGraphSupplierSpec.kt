@@ -7,12 +7,12 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.test.scenarios.GraphScenarios
-import mdk.test.utils.TestTransitionGuardState
+import mdk.test.utils.TestMachineContext
 
 class WalkerGraphSupplierSpec : BehaviorSpec({
     Given("A linear walker exposing its graph via GraphSupplier") {
-        val guardState = TestTransitionGuardState()
-        val walker = GraphScenarios.linearThreeVertexWalker(guardState)
+        val machineContext = TestMachineContext()
+        val walker = GraphScenarios.linearThreeVertexWalker(machineContext)
 
         When("Reading graph vertices and edges from the walker") {
             val graph = walker.graph

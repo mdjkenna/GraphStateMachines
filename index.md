@@ -9,17 +9,17 @@ A Kotlin library for creating state machines using directed graphs where all pos
 
 [View on GitHub](https://github.com/mdjkenna/GraphStateMachines) | [Maven Central](https://central.sonatype.com/artifact/io.github.mdjkenna/graph-state-machines)
 
-## Basics: Building State Machines
+## Building State Machines
 
 - [Defining a State Machine](docs/defining-a-state-machine.md) - Learn how to define states, vertices, and edges using the graph builder DSL.
 - [Walkers and Traversers](docs/walkers-and-traversers.md) - Understand the differences between Traversers and Walkers, their use cases, and when to use each.
 
 ## Designing State Machines
 
-- [Using Cycles](docs/cycles.md) - Implement cyclic graphs and manage infinite loops using transition guards.
-- [Intermediate States](docs/intermediate-states.md) - Represent side effects as explicit states within the graph model.
-- [Transition Guards](docs/transition-guards.md) - Dynamically constrain transitions using transition guards and manage shared guard state.
-- [Handlers](docs/handlers.md) - Execute custom logic at specific points during state transitions.
+- [Hooks, Effects, and Intermediate States](docs/hooks-and-intermediate-states.md) - Hook timing and control, intermediate states, and how effects and control flow are modelled.
+- [Using Cycles](docs/cycles.md) - Use cyclic graphs with traversers and control loop behaviour using edge constraints.
+- [Transition Bounds](docs/transition-bounds.md) - Boundary states for `Next` and `Previous` when no transition is possible.
+- [Machine Context](docs/machine-context.md) - Shared state via a user-defined `MachineContext`.
 
 ## Using State Machines
 

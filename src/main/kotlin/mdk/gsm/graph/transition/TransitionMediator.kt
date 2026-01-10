@@ -1,6 +1,7 @@
 package mdk.gsm.graph.transition
 
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
+import mdk.gsm.graph.VertexContainer
 import mdk.gsm.state.*
 
 internal class TransitionMediator<V, I, G, A>(
@@ -8,21 +9,21 @@ internal class TransitionMediator<V, I, G, A>(
     private val previousTransition: IPreviousTransition<V, I, G, A>,
     private val resettable: IResettable<V>,
     private val pathTraceable: IPathTraceable<V>,
-    private val transitionGuardState: G?,
+    private val machineContext: G?,
     private val gsmConfig: GsmConfig
-) where V : IVertex<I> {
+) where V : Vertex<I> {
 
     var currentBounds = TransitionBounds.WithinBounds
     var currentArgs: A? = null
 
-    private suspend inline fun returnTransitionState(
-        crossinline transitionStateProvider : suspend () -> TransitionState<V, I, A>
-    ) : TransitionState<V, I, A> {
-        val transitionState = transitionStateProvider()
-        currentBounds = transitionState.transitionBounds
-        currentArgs = transitionState.args
+    private suspend inline fun returnTransitionStateResult(
+        crossinline transitionStateProvider : suspend () -> TransitionStateResult<V, I, G, A>
+    ) : TransitionStateResult<V, I, G, A> {
+        val result = transitionStateProvider()
+        currentBounds = result.transitionState.transitionBounds
+        currentArgs = result.transitionState.args
 
-        return transitionState
+        return result
     }
 
     fun initialReadStartVertex() : TransitionState<V, I, A> {
@@ -33,122 +34,165 @@ internal class TransitionMediator<V, I, G, A>(
         )
     }
 
+    private fun createResult(
+        transitionState: TransitionState<V, I, A>,
+        vertexContainer: VertexContainer<V, I, G, A>?
+    ): TransitionStateResult<V, I, G, A> {
+        return TransitionStateResult(
+            transitionState = transitionState,
+            stateEntryListener = vertexContainer,
+            machineContext = machineContext
+        )
+    }
+
     suspend fun handleNext(
         args : A? = null
-    ): TransitionState<V, I, A> = returnTransitionState {
+    ): TransitionStateResult<V, I, G, A> = returnTransitionStateResult {
 
         if (gsmConfig.explicitlyMoveIntoBounds && currentBounds == TransitionBounds.BeforeFirst) {
-            return@returnTransitionState TransitionState(
-                vertex = forwardTransition.currentStep(),
-                transitionBounds = TransitionBounds.WithinBounds,
-                args = args
+            val container = forwardTransition.getVertexContainer(forwardTransition.currentStep().id)
+            return@returnTransitionStateResult createResult(
+                TransitionState(
+                    vertex = forwardTransition.currentStep(),
+                    transitionBounds = TransitionBounds.WithinBounds,
+                    args = args
+                ),
+                container
             )
         }
 
         var autoAdvanceIteration = -1
-        var result : TransitionState<V, I, A>?
+        var result : TransitionStateResult<V, I, G, A>?
 
         while (true) {
             autoAdvanceIteration++
             val container = forwardTransition.getVertexContainer(forwardTransition.currentStep().id)
 
             if (container == null) {
-                result = TransitionState(
-                    vertex = forwardTransition.currentStep(),
-                    transitionBounds = TransitionBounds.BeyondLast,
-                    args = args
+                result = createResult(
+                    TransitionState(
+                        vertex = forwardTransition.currentStep(),
+                        transitionBounds = TransitionBounds.BeyondLast,
+                        args = args
+                    ),
+                    null
                 )
                 break
             }
 
-            if (container.outgoingTransitionHandler != null) {
-                val outgoingTransitionScope = OutgoingTransitionScope(args, transitionGuardState, container.vertex)
-                container.outgoingTransitionHandler(outgoingTransitionScope)
+            if (container.beforeExitHook != null) {
+                val beforeExitScope = BeforeExitScope(args, machineContext, container.vertex)
+                container.beforeExitHook.invoke(beforeExitScope)
 
-                if (outgoingTransitionScope.noChange) {
-                    return@returnTransitionState TransitionState(
-                        vertex = forwardTransition.currentStep(),
-                        transitionBounds = currentBounds,
-                        args = currentArgs
+                if (beforeExitScope.noChange) {
+                    return@returnTransitionStateResult createResult(
+                        TransitionState(
+                            vertex = forwardTransition.currentStep(),
+                            transitionBounds = currentBounds,
+                            args = currentArgs
+                        ),
+                        null
                     )
                 }
             }
 
             val traversalNode = forwardTransition.moveNext(
-                guardState = transitionGuardState,
+                machineContext = machineContext,
                 autoAdvance = autoAdvanceIteration > 0,
                 args = args
             )
 
             if (traversalNode == null) {
-                result = TransitionState(
-                    vertex = forwardTransition.currentStep(),
-                    transitionBounds = TransitionBounds.BeyondLast,
-                    args = args
+                result = createResult(
+                    TransitionState(
+                        vertex = forwardTransition.currentStep(),
+                        transitionBounds = TransitionBounds.BeyondLast,
+                        args = args
+                    ),
+                    null
                 )
                 break
             }
 
             val nextVertex = traversalNode.vertex
-            val handler = forwardTransition.getVertexContainer(nextVertex.id)
-                ?.beforeVisitHandler
+            val nextContainer = forwardTransition.getVertexContainer(nextVertex.id)
+            val beforeEntryHook = nextContainer?.beforeEntryHook
 
-            if (handler != null) {
-                val scope = BeforeVisitScope(
+            if (beforeEntryHook != null) {
+                val scope = BeforeEntryScope(
                     vertex = nextVertex,
-                    guardState = transitionGuardState,
+                    machineContext = machineContext,
                     args = args
                 )
 
-                handler.invoke(scope)
+                beforeEntryHook.invoke(scope)
                 if (scope.autoAdvanceTrigger) {
                     continue
                 }
             }
 
-            result = TransitionState(
-                vertex = nextVertex,
-                transitionBounds = TransitionBounds.WithinBounds,
-                args = args
+            result = createResult(
+                TransitionState(
+                    vertex = nextVertex,
+                    transitionBounds = TransitionBounds.WithinBounds,
+                    args = args
+                ),
+                nextContainer
             )
 
             break
         }
 
-        return@returnTransitionState result
+        return@returnTransitionStateResult result
     }
 
-    suspend fun handlePrevious(): TransitionState<V, I, A> = returnTransitionState {
+    suspend fun handlePrevious(): TransitionStateResult<V, I, G, A> = returnTransitionStateResult {
         if (gsmConfig.explicitlyMoveIntoBounds && currentBounds == TransitionBounds.BeyondLast) {
-            return@returnTransitionState TransitionState(
-                vertex = forwardTransition.currentStep(),
-                transitionBounds = TransitionBounds.WithinBounds,
-                args = forwardTransition.head().args
+            val container = forwardTransition.getVertexContainer(forwardTransition.currentStep().id)
+            return@returnTransitionStateResult createResult(
+                TransitionState(
+                    vertex = forwardTransition.currentStep(),
+                    transitionBounds = TransitionBounds.WithinBounds,
+                    args = forwardTransition.head().args
+                ),
+                container
             )
         }
 
         val previous = previousTransition.movePrevious()
         if (previous == null) {
-            TransitionState(
-                vertex = forwardTransition.currentStep(),
-                transitionBounds = TransitionBounds.BeforeFirst,
-                args = null
+            createResult(
+                TransitionState(
+                    vertex = forwardTransition.currentStep(),
+                    transitionBounds = TransitionBounds.BeforeFirst,
+                    args = null
+                ),
+                null
             )
         } else {
-            TransitionState(
-                vertex = previous.vertex,
-                transitionBounds = TransitionBounds.WithinBounds,
-                args = previous.args
+            val container = forwardTransition.getVertexContainer(previous.vertex.id)
+            createResult(
+                TransitionState(
+                    vertex = previous.vertex,
+                    transitionBounds = TransitionBounds.WithinBounds,
+                    args = previous.args
+                ),
+                container
             )
         }
     }
 
-    fun handleReset() : TransitionState<V, I, A> {
-        (transitionGuardState as? ITransitionGuardState)?.onReset()
-        return TransitionState(
-            vertex = resettable.reset(),
-            transitionBounds = TransitionBounds.WithinBounds,
-            args = null
+    fun handleReset() : TransitionStateResult<V, I, G, A> {
+        (machineContext as? MachineContext)?.onReset()
+        val resetVertex = resettable.reset()
+        val container = forwardTransition.getVertexContainer(resetVertex.id)
+        return createResult(
+            TransitionState(
+                vertex = resetVertex,
+                transitionBounds = TransitionBounds.WithinBounds,
+                args = null
+            ),
+            container
         )
     }
 
@@ -159,15 +203,15 @@ internal class TransitionMediator<V, I, G, A>(
     companion object {
         fun <V, I, G, A> create(
             capabilities: TransitionCapabilities<V, I, G, A>,
-            transitionGuardState: G?,
+            machineContext: G?,
             gsmConfig: GsmConfig
-        ): TransitionMediator<V, I, G, A> where V : IVertex<I> {
+        ): TransitionMediator<V, I, G, A> where V : Vertex<I> {
             return TransitionMediator(
                 forwardTransition = capabilities.forward,
                 previousTransition = capabilities.previous,
                 resettable = capabilities.resettable,
                 pathTraceable = capabilities.pathTraceable,
-                transitionGuardState = transitionGuardState,
+                machineContext = machineContext,
                 gsmConfig = gsmConfig
             )
         }

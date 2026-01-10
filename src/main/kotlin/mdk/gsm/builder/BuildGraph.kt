@@ -3,7 +3,7 @@
 package mdk.gsm.builder
 
 import mdk.gsm.graph.Graph
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.graph.VertexContainer
 
 @DslMarker
@@ -18,7 +18,7 @@ internal annotation class GsmBuilderScope
  *
  * Example:
  * ```kotlin
- * val graph = buildGraphOnly<MyVertex, String, Flags, Nothing> {
+ * val graph = buildGraph<MyVertex, String, Flags, Nothing> {
  *     addVertex(MyVertex.Start) {
  *         addEdge { setTo(MyVertex.Step1) }
  *     }
@@ -29,7 +29,7 @@ internal annotation class GsmBuilderScope
  * }
  * ```
  *
- * @param V The type of vertices (states). Must implement [IVertex].
+ * @param V The type of vertices (states). Must implement [Vertex].
  * @param I The type of vertex identifiers.
  * @param G The type of transition guard state. Defaults to Nothing.
  * @param A The type of per-action arguments carried by actions (if used by the state machine).
@@ -37,9 +37,9 @@ internal annotation class GsmBuilderScope
  * @return A fully constructed [Graph].
  */
 @GsmBuilderScope
-fun <V, I, G, A> buildGraphOnly(
+fun <V, I, G, A> buildGraph(
     scopeConsumer : GraphBuilderScope<V, I, G, A>.() -> Unit
-) : Graph<V, I, G, A> where V : IVertex<I> {
+) : Graph<V, I, G, A> where V : Vertex<I> {
     val graphBuilder = GraphBuilder<V, I, G, A>()
     val graphBuilderScope = GraphBuilderScope(graphBuilder)
     scopeConsumer(graphBuilderScope)
@@ -54,14 +54,14 @@ fun <V, I, G, A> buildGraphOnly(
  * traverser/walker builder (for example, via `setWorkflowGraph(...)`). The graph contains
  * vertices and their outgoing edges with optional transition guards.
  *
- * @param V The type of vertices (states). Must implement [IVertex].
+ * @param V The type of vertices (states). Must implement [Vertex].
  * @param I The type of vertex identifiers.
  * @param scopeConsumer DSL for declaring vertices and edges within the graph being built.
  * @return A fully constructed [Graph].
  */
-fun <V, I> buildPlainGraphOnly(
+fun <V, I> buildPlainGraph(
     scopeConsumer : GraphBuilderScope<V, I, Nothing, Nothing>.() -> Unit
-) : Graph<V, I, Nothing, Nothing> where V : IVertex<I> {
+) : Graph<V, I, Nothing, Nothing> where V : Vertex<I> {
     val graphBuilder = GraphBuilder<V, I, Nothing, Nothing>()
     val graphBuilderScope = GraphBuilderScope(graphBuilder)
     scopeConsumer(graphBuilderScope)
@@ -81,7 +81,7 @@ fun <V, I> buildPlainGraphOnly(
  *
  * Example:
  * ```kotlin
- * buildGraphOnly<MyVertex, String, Flags, Nothing> {
+ * buildGraph<MyVertex, String, Flags, Nothing> {
  *     addVertex(MyVertex.Start) {
  *         addEdge { setTo(MyVertex.Next) }
  *     }
@@ -90,7 +90,7 @@ fun <V, I> buildPlainGraphOnly(
  */
 class GraphBuilderScope<V, I, G, A> internal constructor(
     private val workflowGraphGraphBuilder: GraphBuilder<V, I, G, A>
-) where V : IVertex<I> {
+) where V : Vertex<I> {
     /**
      * Adds a vertex to the graph with optional DSL to configure its outgoing edges and handlers.
      *
@@ -133,7 +133,7 @@ class GraphBuilderScope<V, I, G, A> internal constructor(
     ) = addVertex(vertex, scopeConsumer)
 }
 
-internal class GraphBuilder<V, I, G, A> where V : IVertex<I> {
+internal class GraphBuilder<V, I, G, A> where V : Vertex<I> {
     private val map = HashMap<I, VertexContainer<V, I, G, A>>()
 
     fun add(vertexContainer: VertexContainer<V, I, G, A>) {

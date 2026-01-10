@@ -1,8 +1,8 @@
 package mdk.test.utils
 
 import kotlinx.coroutines.CoroutineScope
-import mdk.gsm.builder.buildGuardedTraverser
-import mdk.gsm.builder.buildGuardedWalker
+import mdk.gsm.builder.buildTraverserWithContext
+import mdk.gsm.builder.buildWalkerWithContext
 import mdk.gsm.graph.transition.traverse.EdgeTraversalType
 import mdk.gsm.scope.StateMachineScopeFactory
 import mdk.gsm.state.traverser.Traverser
@@ -39,11 +39,11 @@ object TestBuilderUtils {
     val v15 = TestVertex("15")
 
     fun build8VertexGraphStateMachine(
-        testProgressionFlags: TestTransitionGuardState,
+        testProgressionFlags: TestMachineContext,
         edgeTraversalType: EdgeTraversalType,
         add7to3cycle : Boolean = false,
-    ): Traverser<TestVertex, String, TestTransitionGuardState, Nothing> {
-        return buildGuardedTraverser(testProgressionFlags) {
+    ): Traverser<TestVertex, String, TestMachineContext, Nothing> {
+        return buildTraverserWithContext(testProgressionFlags) {
             setTraversalType(edgeTraversalType)
 
             buildGraph(v1) {
@@ -51,15 +51,15 @@ object TestBuilderUtils {
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo2 != true
+                        onBeforeTransition {
+                            if (machineContext?.blockedGoingTo2 == true) blockTransition()
                         }
                     }
 
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo3 != true
+                        onBeforeTransition {
+                            if (machineContext?.blockedGoingTo3 == true) blockTransition()
                         }
                     }
                 }
@@ -73,8 +73,8 @@ object TestBuilderUtils {
                 addVertex(v3) {
                     addEdge {
                         setTo(v5)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo5 != true
+                        onBeforeTransition {
+                            if (machineContext?.blockedGoingTo5 == true) blockTransition()
                         }
                     }
 
@@ -92,9 +92,8 @@ object TestBuilderUtils {
                 addVertex(v5) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo7 != true && (from as SubTestVertex).testField // cast for subclass access
-                                    && v5.testField // alternatively capturing lambda, these are the two options
+                        onBeforeTransition {
+                            if (machineContext?.blockedGoingTo7 == true || !(from as SubTestVertex).testField || !v5.testField) blockTransition()
                         }
                     }
                 }
@@ -102,8 +101,8 @@ object TestBuilderUtils {
                 addVertex(v6) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo7 != true
+                        onBeforeTransition {
+                            if (machineContext?.blockedGoingTo7 == true) blockTransition()
                         }
                     }
                 }
@@ -116,8 +115,8 @@ object TestBuilderUtils {
                     if (add7to3cycle) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard {
-                                guardState?.blockedGoingTo3 != true
+                            onBeforeTransition {
+                                if (machineContext?.blockedGoingTo3 == true) blockTransition()
                             }
                         }
                     }
@@ -129,23 +128,23 @@ object TestBuilderUtils {
     }
 
     fun build8VertexWalker(
-        testProgressionFlags: TestTransitionGuardState,
+        testProgressionFlags: TestMachineContext,
         add7to3cycle : Boolean = false,
-    ): Walker<TestVertex, String, TestTransitionGuardState, Nothing> {
-        return buildGuardedWalker(testProgressionFlags) {
+    ): Walker<TestVertex, String, TestMachineContext, Nothing> {
+        return buildWalkerWithContext(testProgressionFlags) {
             buildGraph(v1) {
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo2 != true
+                        onBeforeTransition {
+                            if (machineContext?.blockedGoingTo2 == true) blockTransition()
                         }
                     }
 
                     addEdge {
                         setTo(v3)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo3 != true
+                        onBeforeTransition {
+                            if (machineContext?.blockedGoingTo3 == true) blockTransition()
                         }
                     }
                 }
@@ -159,8 +158,8 @@ object TestBuilderUtils {
                 addVertex(v3) {
                     addEdge {
                         setTo(v5)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo5 != true
+                        onBeforeTransition {
+                            if (machineContext?.blockedGoingTo5 == true) blockTransition()
                         }
                     }
 
@@ -178,9 +177,8 @@ object TestBuilderUtils {
                 addVertex(v5) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo7 != true && (from as SubTestVertex).testField // cast for subclass access
-                                    && v5.testField // alternatively capturing lambda, these are the two options
+                        onBeforeTransition {
+                            if (machineContext?.blockedGoingTo7 == true || !(from as SubTestVertex).testField || !v5.testField) blockTransition()
                         }
                     }
                 }
@@ -188,8 +186,8 @@ object TestBuilderUtils {
                 addVertex(v6) {
                     addEdge {
                         setTo(v7)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedGoingTo7 != true
+                        onBeforeTransition {
+                            if (machineContext?.blockedGoingTo7 == true) blockTransition()
                         }
                     }
                 }
@@ -202,8 +200,8 @@ object TestBuilderUtils {
                     if (add7to3cycle) {
                         addEdge {
                             setTo(v3)
-                            setEdgeTransitionGuard {
-                                guardState?.blockedGoingTo3 != true
+                            onBeforeTransition {
+                                if (machineContext?.blockedGoingTo3 == true) blockTransition()
                             }
                         }
                     }
@@ -215,11 +213,11 @@ object TestBuilderUtils {
     }
 
     fun build15VertexGraphStateMachine(
-        transitionGuardState: Test15VertexTransitionArgs,
+        machineContext: Test15VertexTransitionArgs,
         edgeTraversalType: EdgeTraversalType
     ): Traverser<TestVertex, String, Test15VertexTransitionArgs, Nothing> {
-        return buildGuardedTraverser(transitionGuardState) {
-            setTransitionGuardState(transitionGuardState)
+        return buildTraverserWithContext(machineContext) {
+            setMachineContext(machineContext)
             setTraversalType(edgeTraversalType)
 
             buildGraph(v1) {
@@ -242,8 +240,8 @@ object TestBuilderUtils {
                 addVertex(v3) {
                     addEdge {
                         setTo(v2)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedFrom3To2 != true
+                        onBeforeTransition {
+                            if (machineContext?.blockedFrom3To2 == true) blockTransition()
                         }
                     }
 
@@ -286,8 +284,8 @@ object TestBuilderUtils {
                 addVertex(v8) {
                     addEdge {
                         setTo(v9)
-                        setEdgeTransitionGuard {
-                            guardState?.blockedFrom8To9 != true
+                        onBeforeTransition {
+                            if (machineContext?.blockedFrom8To9 == true) blockTransition()
                         }
                     }
                     addEdge {
@@ -347,13 +345,13 @@ object TestBuilderUtils {
     }
 
     fun <G> buildIntermediateTestGraph(
-        guardState: G,
+        machineContext: G,
         scope : CoroutineScope = StateMachineScopeFactory.newScope(),
-        beforeVisitCalls: MutableList<String>
+        beforeEntryCalls: MutableList<String>
     ): Traverser<StringVertex, String, G, Nothing> {
         val ids = IntermediateTestingIds
 
-        return buildGuardedTraverser(guardState, scope) {
+        return buildTraverserWithContext(machineContext, scope) {
 
             val start = StringVertex(ids.START)
             val intermediate1 = StringVertex(ids.INTERMEDIATE_1)
@@ -370,8 +368,8 @@ object TestBuilderUtils {
                 }
 
                 addVertex(intermediate1) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
 
                         autoAdvance()
                     }
@@ -382,8 +380,8 @@ object TestBuilderUtils {
                 }
 
                 addVertex(regular1) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                     }
 
                     addEdge {
@@ -392,8 +390,8 @@ object TestBuilderUtils {
                 }
 
                 addVertex(intermediate2) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         autoAdvance()
                     }
 
@@ -403,8 +401,8 @@ object TestBuilderUtils {
                 }
 
                 addVertex(regular2) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                     }
 
                     addEdge {
@@ -413,8 +411,8 @@ object TestBuilderUtils {
                 }
 
                 addVertex(end) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         autoAdvance()
                     }
                 }
@@ -424,13 +422,13 @@ object TestBuilderUtils {
 
 
     fun <G> buildConditionalTestGraph(
-        guardState: G,
-        beforeVisitCalls: MutableList<String>,
+        machineContext: G,
+        beforeEntryCalls: MutableList<String>,
         shouldAutoAdvanceProvider: () -> Boolean
     ): Traverser<StringVertex, String, G, Nothing> {
         val ids = IntermediateTestingIds
 
-        return buildGuardedTraverser(guardState) {
+        return buildTraverserWithContext(machineContext) {
             setTraversalType(EdgeTraversalType.DFSAcyclic)
 
             val start = StringVertex(ids.START)
@@ -446,8 +444,8 @@ object TestBuilderUtils {
 
                 // This state conditionally auto-advances
                 addVertex(conditional) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         if (shouldAutoAdvanceProvider()) {
                             autoAdvance() // Skip this state based on condition
                         }
@@ -459,8 +457,8 @@ object TestBuilderUtils {
                 }
 
                 addVertex(end) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                     }
                 }
             }
@@ -468,12 +466,12 @@ object TestBuilderUtils {
     }
 
     fun <G> buildChainedIntermediateTestGraph(
-        guardState: G,
-        beforeVisitCalls: MutableList<String>
+        machineContext: G,
+        beforeEntryCalls: MutableList<String>
     ): Traverser<StringVertex, String, G, Nothing> {
         val ids = IntermediateTestingIds
 
-        return buildGuardedTraverser(guardState) {
+        return buildTraverserWithContext(machineContext) {
             setTraversalType(EdgeTraversalType.DFSAcyclic)
 
             val start = StringVertex(ids.START)
@@ -491,8 +489,8 @@ object TestBuilderUtils {
 
                 // Chain of intermediate states
                 addVertex(intermediate1) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         autoAdvance()
                     }
 
@@ -502,8 +500,8 @@ object TestBuilderUtils {
                 }
 
                 addVertex(intermediate2) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         autoAdvance()
                     }
 
@@ -513,8 +511,8 @@ object TestBuilderUtils {
                 }
 
                 addVertex(intermediate3) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                         autoAdvance()
                     }
 
@@ -524,8 +522,8 @@ object TestBuilderUtils {
                 }
 
                 addVertex(end) {
-                    onBeforeVisit {
-                        beforeVisitCalls.add(vertex.id)
+                    onBeforeEntry {
+                        beforeEntryCalls.add(vertex.id)
                     }
                 }
             }

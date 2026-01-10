@@ -4,13 +4,13 @@ package mdk.gsm.state
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import mdk.gsm.action.CompletableAction
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.graph.transition.TransitionMediator
 
 internal class GsmController<V, I, G, A> internal constructor(
     private val graphTransitionMediator: TransitionMediator<V, I, G, A>,
     internal val graph: mdk.gsm.graph.Graph<V, I, G, A>
-) where V : IVertex<I> {
+) where V : Vertex<I> {
 
     val stateOut = MutableStateFlow<TransitionState<V, I, A>>(
         graphTransitionMediator.initialReadStartVertex()
@@ -51,12 +51,18 @@ internal class GsmController<V, I, G, A> internal constructor(
 
     private suspend inline fun updateState(
         completableAction: CompletableAction<V, I, A>,
-        crossinline update : suspend () -> TransitionState<V, I, A>
+        crossinline update : suspend () -> TransitionStateResult<V, I, G, A>
     ) {
-        val newState = update()
+        val result = update()
+        val newState = result.transitionState
         stateOut.value = newState
 
         completableAction.deferred.complete(newState)
+
+        result.stateEntryListener?.onStateEntered(
+            machineContext = result.machineContext,
+            args = newState.args
+        )
     }
 }
 

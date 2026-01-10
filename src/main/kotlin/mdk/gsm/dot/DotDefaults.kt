@@ -1,9 +1,10 @@
 package mdk.gsm.dot
 
 /**
- * Default values for DOT styling
+ * Default values for DOT styling.
+ * For internal use. Subject to change.
  */
-object DotDefaults {
+internal object DotDefaults {
     const val DEFAULT_VERTEX_FILL_COLOR = "#005FAF"
     const val DEFAULT_VERTEX_BORDER_COLOR = "#005FAF"
     const val DEFAULT_VERTEX_TEXT_COLOR = "#FFFFFF"

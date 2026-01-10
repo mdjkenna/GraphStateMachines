@@ -1,6 +1,6 @@
 package mdk.gsm.state.traverser
 
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.TransitionState
 
@@ -17,16 +17,16 @@ import mdk.gsm.state.TransitionState
  * - Providing mechanisms to await action completion
  * - Handling the lifecycle of the traverser's processing resources
  *
- * @param V The type of vertices (states) in the graph. Must implement [IVertex].
+ * @param V The type of vertices (states) in the graph. Must implement [Vertex].
  * @param I The type of vertex identifiers used in the graph.
- * @param G The type of traversal guard state, which controls conditional edge traversal. Must implement [mdk.gsm.state.ITransitionGuardState].
+ * @param G The type of machine context, which is shared across all transitions. Must implement [mdk.gsm.state.MachineContext].
  * @param A The type of action arguments that can be passed when dispatching actions.
  *
  * @see mdk.gsm.state.GraphStateMachineAction
  * @see Traverser
  * @see TraverserState
  */
-interface TraverserDispatcher<V, I, G, A> where V : IVertex<I> {
+interface TraverserDispatcher<V, I, G, A> where V : Vertex<I> {
     /**
      * Asynchronously dispatches an action to the traverser without waiting for it to complete.
      *

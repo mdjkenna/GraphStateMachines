@@ -1,6 +1,6 @@
 package mdk.gsm.state
 
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 
 /**
  * Represents the current state of a graph transition in the graph state machine.
@@ -12,7 +12,7 @@ import mdk.gsm.graph.IVertex
  * (such as the beginning or end of a directed acyclic graph), which is particularly useful for
  * workflow-like applications where there is a definite start and end.
  *
- * @param V The vertex type, which must implement [IVertex] with identifier type [I]
+ * @param V The vertex type, which must implement [Vertex] with identifier type [I]
  * @param I The type of the vertex identifier
  * @param A The type of arguments that can be passed during transition actions
  * 
@@ -28,7 +28,7 @@ data class TransitionState<out V, I, out A>(
     val vertex : V,
     val transitionBounds: TransitionBounds = TransitionBounds.WithinBounds,
     val args : A?
-) where V : IVertex<I> {
+) where V : Vertex<I> {
 
     /**
      * Indicates whether the transition is within the normal bounds of the graph.

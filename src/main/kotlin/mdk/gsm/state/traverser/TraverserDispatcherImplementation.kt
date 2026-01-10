@@ -6,7 +6,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import mdk.gsm.action.CompletableAction
-import mdk.gsm.graph.IVertex
+import mdk.gsm.graph.Vertex
 import mdk.gsm.state.GraphStateMachineAction
 import mdk.gsm.state.GsmController
 import mdk.gsm.state.TransitionState
@@ -14,7 +14,7 @@ import mdk.gsm.state.TransitionState
 internal class TraverserDispatcherImplementation<V, I, G, A> private constructor(
     private val scope: CoroutineScope,
     private val actionChannel: Channel<CompletableAction<V, I, A>>
-) : TraverserDispatcher<V, I, G, A> where V : IVertex<I> {
+) : TraverserDispatcher<V, I, G, A> where V : Vertex<I> {
 
     override fun launchDispatch(action: GraphStateMachineAction<A>) {
         scope.launch {
@@ -52,7 +52,7 @@ internal class TraverserDispatcherImplementation<V, I, G, A> private constructor
             gsm: GsmController<V, I, G, A>,
             singleThreadedScope: CoroutineScope,
             actionChannel: Channel<CompletableAction<V, I, A>>,
-        ) : TraverserDispatcherImplementation<V, I, G, A> where V : IVertex<I> {
+        ) : TraverserDispatcherImplementation<V, I, G, A> where V : Vertex<I> {
 
             val gsmDispatcherImpl: TraverserDispatcherImplementation<V, I, G, A> = TraverserDispatcherImplementation(
                 singleThreadedScope,

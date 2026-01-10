@@ -8,7 +8,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import mdk.gsm.builder.*
 import mdk.gsm.state.GraphStateMachineAction
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 import mdk.test.utils.TestVertex
 
 class BuilderScopeMethodsSpec : BehaviorSpec({
@@ -162,9 +162,9 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         }
     }
     
-    Given("A graph with conditional edges using transition guards") {
+    Given("A graph with conditional edges using transition hooks") {
         
-        When("Multiple edges have mutually exclusive transition guards") {
+        When("Multiple edges have mutually exclusive transition hooks") {
             var allowPath1 = true
             val traverser = buildTraverser {
                 val start = TestVertex("start")
@@ -175,14 +175,14 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
                     addVertex(start) {
                         addEdge {
                             setTo(path1)
-                            setEdgeTransitionGuard {
-                                allowPath1
+                            onBeforeTransition {
+                                if (!allowPath1) blockTransition()
                             }
                         }
                         addEdge {
                             setTo(path2)
-                            setEdgeTransitionGuard {
-                                !allowPath1
+                            onBeforeTransition {
+                                if (allowPath1) blockTransition()
                             }
                         }
                     }
@@ -191,7 +191,7 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
                 }
             }
             
-            Then("Traversal selects edges based on guard evaluation") {
+            Then("Traversal selects edges based on hook evaluation") {
                 runBlocking {
                     traverser.dispatchAndAwaitResult(GraphStateMachineAction.Next)
                     traverser.current.value.vertex.id shouldBe "path1"
@@ -253,9 +253,9 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         }
     }
     
-    Given("A graph with onBeforeVisit vertex lifecycle handlers") {
+    Given("A graph with before entry vertex lifecycle hooks") {
         
-        When("Vertices are configured with onBeforeVisit callbacks") {
+        When("Vertices are configured with onBeforeEntry callbacks") {
             val visitedVertices = mutableListOf<String>()
             val walker = buildWalker {
                 val v1 = TestVertex("1")
@@ -264,26 +264,26 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
                 
                 buildGraph(v1) {
                     addVertex(v1) {
-                        onBeforeVisit {
+                        onBeforeEntry {
                             visitedVertices.add("v1")
                         }
                         addEdge { setTo(v2) }
                     }
                     addVertex(v2) {
-                        onBeforeVisit {
+                        onBeforeEntry {
                             visitedVertices.add("v2")
                         }
                         addEdge { setTo(v3) }
                     }
                     addVertex(v3) {
-                        onBeforeVisit {
+                        onBeforeEntry {
                             visitedVertices.add("v3")
                         }
                     }
                 }
             }
             
-            Then("The callbacks are invoked when entering each vertex") {
+            Then("The transition hooks are invoked when entering each vertex") {
                 runBlocking {
                     visitedVertices.size shouldBe 0
                     
@@ -297,9 +297,9 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         }
     }
     
-    Given("A graph with onOutgoingTransition vertex lifecycle handlers") {
+    Given("A graph with before exit vertex lifecycle hooks") {
         
-        When("Vertices are configured with onOutgoingTransition callbacks") {
+        When("Vertices are configured with before exit callbacks") {
             val transitionLog = mutableListOf<String>()
             val traverser = buildTraverser {
                 val v1 = TestVertex("1")
@@ -308,13 +308,13 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
                 
                 buildGraph(v1) {
                     addVertex(v1) {
-                        onOutgoingTransition {
+                        onBeforeExit {
                             transitionLog.add("leaving-v1")
                         }
                         addEdge { setTo(v2) }
                     }
                     addVertex(v2) {
-                        onOutgoingTransition {
+                        onBeforeExit {
                             transitionLog.add("leaving-v2")
                         }
                         addEdge { setTo(v3) }
@@ -342,7 +342,7 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
             val v2 = TestVertex("2")
             val v3 = TestVertex("3")
 
-            val preBuiltGraph = buildGraphOnly<TestVertex, String, Nothing, Nothing> {
+            val preBuiltGraph = buildGraph<TestVertex, String, Nothing, Nothing> {
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)
@@ -399,10 +399,10 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         }
     }
 
-    Given("A walker built using setTraversalGuardState") {
+    Given("A walker built using setMachineContext") {
 
-        When("The guard state is set explicitly via setTraversalGuardState") {
-            val guardState = object : ITransitionGuardState {
+        When("The machine context is set explicitly via setMachineContext") {
+            val machineContext = object : MachineContext {
                 var allowTransition = true
                 override fun onReset() {
                     allowTransition = true
@@ -412,15 +412,14 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
             val v1 = TestVertex("1")
             val v2 = TestVertex("2")
 
-            val walker = buildGuardedWalker(guardState) {
-                setTraversalGuardState(guardState)
+            val walker = buildWalkerWithContext(machineContext) {
+                setMachineContext(machineContext)
                 buildGraph(v1) {
                     addVertex(v1) {
                         addEdge {
                             setTo(v2)
-                            setEdgeTransitionGuard {
-                                this.guardState?.let { true }
-                                    ?: false
+                            onBeforeTransition {
+                                if (this.machineContext == null) blockTransition()
                             }
                         }
                     }
@@ -428,7 +427,7 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
                 }
             }
 
-            Then("The walker uses the guard state for transition decisions") {
+            Then("The walker uses the machine context for transition decisions") {
                 runBlocking {
                     walker.dispatchAndAwaitResult(GraphStateMachineAction.Next)
                     walker.current.value.vertex.id shouldBe "2"
@@ -437,13 +436,13 @@ class BuilderScopeMethodsSpec : BehaviorSpec({
         }
     }
 
-    Given("A graph built using buildGraphOnly with simplified type parameters") {
+    Given("A graph built using buildGraph with simplified type parameters") {
 
-        When("buildGraphOnly is called with only vertex and ID type parameters") {
+        When("buildGraph is called with only vertex and ID type parameters") {
             val v1 = TestVertex("1")
             val v2 = TestVertex("2")
 
-            val graph = buildPlainGraphOnly {
+            val graph = buildPlainGraph {
                 addVertex(v1) {
                     addEdge {
                         setTo(v2)

@@ -2,7 +2,7 @@
 
 package mdk.gsm.graph
 
-import mdk.gsm.state.ITransitionGuardState
+import mdk.gsm.state.MachineContext
 
 /**
  * Represents a graph data structure used for state machine transitions. This graph
@@ -15,14 +15,14 @@ import mdk.gsm.state.ITransitionGuardState
  *
  * The [Graph] class is immutable if the vertex implementations are immutable.
  *
- * @param V The type of vertices stored in this graph. Must implement [IVertex].
- * @param I The type of the vertex ID. Must correspond to the type parameter of [IVertex] implemented by [V].
- * @param G The type of transition guard state used for edge transitions. Must implement [ITransitionGuardState].
+ * @param V The type of vertices stored in this graph. Must implement [Vertex].
+ * @param I The type of the vertex ID. Must correspond to the type parameter of [Vertex] implemented by [V].
+ * @param G The type of machine context used for edge transitions. Must implement [MachineContext].
  * @param A The type of action argument
  */
 class Graph<V, I, G, A> internal constructor(
     private val map: Map<I, VertexContainer<V, I, G, A>>
-) where V : IVertex<I> {
+) where V : Vertex<I> {
 
     fun containsVertex(vertex: V): Boolean {
         return map.containsKey(vertex.id)
